@@ -18,12 +18,13 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      # Always builds with the correct /sea-guard-ai/ base — a plain rebuild can never
-      # white-screen the live site again.
-      - run: npm run build:pages
+      # Custom domain lagokefalos.evlabsai.gr serves from the ROOT, so build with base "/".
+      # public/CNAME is copied into dist on every build, so the custom domain persists.
+      - run: npm run build
       - name: Publish to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           publish_branch: gh-pages
+          cname: lagokefalos.evlabsai.gr

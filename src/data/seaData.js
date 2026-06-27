@@ -75,11 +75,11 @@ export function riskInk(hex) {
 }
 
 export function classifyRisk(score) {
-  if (score >= 82) return { level: "Πολύ υψηλό", color: "#c0202a", tone: "danger" };
-  if (score >= 66) return { level: "Υψηλό", color: "#e73d3d", tone: "danger" };
-  if (score >= 48) return { level: "Μέτριο προς υψηλό", color: "#f08c2e", tone: "warn" };
-  if (score >= 30) return { level: "Μέτριο", color: "#e6c84f", tone: "warn" };
-  return { level: "Χαμηλό", color: "#2fa66a", tone: "default" };
+  if (score >= 82) return { level: "Κρίσιμος", color: "#c0202a", tone: "danger" };
+  if (score >= 66) return { level: "Υψηλός", color: "#e73d3d", tone: "danger" };
+  if (score >= 48) return { level: "Μέτριος προς υψηλός", color: "#f08c2e", tone: "warn" };
+  if (score >= 30) return { level: "Μέτριος", color: "#e6c84f", tone: "warn" };
+  return { level: "Χαμηλός", color: "#2fa66a", tone: "default" };
 }
 
 const clamp100 = (v) => Math.max(0, Math.min(100, Math.round(v)));
@@ -319,7 +319,7 @@ function sstReason(t) {
 
 function sstReasonEn(t) {
   if (t == null) return "SST forecast unavailable.";
-  if (t >= 24) return `Very warm water (${t.toFixed(1)}°C) — favourable for pufferfish.`;
+  if (t >= 24) return `Very warm water (${t.toFixed(1)}°C) — favorable for pufferfish.`;
   if (t >= 19) return `Warm water (${t.toFixed(1)}°C) — increased activity.`;
   if (t >= 15) return `Mild water (${t.toFixed(1)}°C) — moderate activity.`;
   return `Cold water (${t.toFixed(1)}°C) — limited presence.`;
@@ -350,9 +350,9 @@ function recommendEn(risk) {
 }
 
 function describeSstEn(t) {
-  if (t >= 26) return `SST ${t.toFixed(1)}°C — very favourable conditions`;
-  if (t >= 22) return `SST ${t.toFixed(1)}°C — favourable conditions`;
-  if (t >= 18) return `SST ${t.toFixed(1)}°C — mildly favourable`;
+  if (t >= 26) return `SST ${t.toFixed(1)}°C — very favorable conditions`;
+  if (t >= 22) return `SST ${t.toFixed(1)}°C — favorable conditions`;
+  if (t >= 18) return `SST ${t.toFixed(1)}°C — mildly favorable`;
   if (t >= 15) return `SST ${t.toFixed(1)}°C — marginal conditions`;
-  return `SST ${t.toFixed(1)}°C — unfavourable`;
+  return `SST ${t.toFixed(1)}°C — unfavorable`;
 }

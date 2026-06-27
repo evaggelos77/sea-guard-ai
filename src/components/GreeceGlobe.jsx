@@ -19,8 +19,8 @@ const clampN = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 function riskNode(risk) {
   if (risk >= 82) return { color: "#E03A4E", on: "#fff", label: "Κρίσιμος", labelEn: "Critical" };
   if (risk >= 66) return { color: "#F07A2E", on: "#2a1400", label: "Υψηλός", labelEn: "High" };
-  if (risk >= 48) return { color: "#F2C744", on: "#3a2c00", label: "Μέτριος", labelEn: "Moderate" };
-  if (risk >= 30) return { color: "#5FB37A", on: "#04231c", label: "Χαμηλός-μέτριος", labelEn: "Low-moderate" };
+  if (risk >= 48) return { color: "#F2C744", on: "#3a2c00", label: "Μέτριος προς υψηλός", labelEn: "Moderate-high" };
+  if (risk >= 30) return { color: "#5FB37A", on: "#04231c", label: "Μέτριος", labelEn: "Moderate" };
   return { color: "#36C5A8", on: "#04231c", label: "Χαμηλός", labelEn: "Low" };
 }
 

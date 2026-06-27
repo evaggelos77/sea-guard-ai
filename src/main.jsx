@@ -593,7 +593,7 @@ function App() {
       const result = {
         id: "__search",
         area: geo.name,
-        region: geo.admin || "Αναζήτηση",
+        region: geo.admin || (lang === "en" ? "Search" : "Αναζήτηση"),
         coords: [geo.lat, geo.lon],
         reports48h: 0,
         kg7d: 0,
@@ -705,7 +705,12 @@ function App() {
           )}</td></tr>`
       )
       .join("");
-    const html = `<!doctype html><html lang="el"><head><meta charset="utf-8"><title>EV SEA GUARD AI Report</title><style>body{font-family:Arial,sans-serif;margin:32px;color:#10202a}h1{font-size:24px}table{width:100%;border-collapse:collapse;margin-top:20px}td,th{border:1px solid #ccd6dd;padding:8px;text-align:left}th{background:#edf6f8}.risk{font-weight:700;color:#b51d1d}</style></head><body><h1>EV SEA GUARD AI - Αναφορά Περιοχής</h1><p>Περιοχή: <strong>${selectedZone.area}</strong> | Risk Score: <span class="risk">${selectedZone.risk}/100</span> | Επίπεδο: ${selectedZone.level}</p><p>${selectedZone.recommendation}</p><table><thead><tr><th>ID</th><th>Περιοχή</th><th>Πηγή</th><th>AI</th><th>Κατάσταση</th><th>Ώρα</th></tr></thead><tbody>${rows}</tbody></table><script>window.onload=()=>window.print()</script></body></html>`;
+    const rep = lang === "en"
+      ? { title: "Area Report", area: "Area", lvl: "Level", h: ["ID", "Area", "Source", "AI", "Status", "Time"] }
+      : { title: "Αναφορά Περιοχής", area: "Περιοχή", lvl: "Επίπεδο", h: ["ID", "Περιοχή", "Πηγή", "AI", "Κατάσταση", "Ώρα"] };
+    const levelText = lvl(selectedZone);
+    const recText = lang === "en" && selectedZone.recommendationEn ? selectedZone.recommendationEn : selectedZone.recommendation;
+    const html = `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><title>EV SEA GUARD AI ${escapeHtml(rep.title)}</title><style>body{font-family:Arial,sans-serif;margin:32px;color:#10202a}h1{font-size:24px}table{width:100%;border-collapse:collapse;margin-top:20px}td,th{border:1px solid #ccd6dd;padding:8px;text-align:left}th{background:#edf6f8}.risk{font-weight:700;color:#b51d1d}</style></head><body><h1>EV SEA GUARD AI - ${escapeHtml(rep.title)}</h1><p>${escapeHtml(rep.area)}: <strong>${escapeHtml(selectedZone.area)}</strong> | Risk score: <span class="risk">${selectedZone.risk}/100</span> | ${escapeHtml(rep.lvl)}: ${escapeHtml(levelText)}</p><p>${escapeHtml(recText)}</p><table><thead><tr>${rep.h.map((x) => `<th>${escapeHtml(x)}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table><script>window.onload=()=>window.print()</script></body></html>`;
     const win = window.open("", "_blank", "width=960,height=720");
     if (win) {
       win.document.write(html);
@@ -713,7 +718,7 @@ function App() {
     } else {
       // Popup μπλοκαρισμένο: κατέβασε το HTML ως αρχείο για εκτύπωση/PDF
       downloadBlob(html, "ev-sea-guard-ai-report.html", "text/html;charset=utf-8");
-      alert("Το αναδυόμενο παράθυρο μπλοκαρίστηκε. Κατεβάσαμε την αναφορά ως αρχείο HTML — άνοιξέ το και τύπωσέ το σε PDF.");
+      alert(t("Το αναδυόμενο παράθυρο μπλοκαρίστηκε. Κατεβάσαμε την αναφορά ως αρχείο HTML — άνοιξέ το και τύπωσέ το σε PDF.", "The pop-up was blocked. We downloaded the report as an HTML file — open it and print it to PDF."));
     }
   }
 
@@ -840,10 +845,10 @@ function App() {
         <IntelligenceStrip forecast={forecast} selectedZone={selectedZone} />
 
         <section className="metrics-grid" aria-label={t("Σύνοψη κινδύνου", "Risk summary")}>
-          <Metric icon={Gauge} label={t("Δείκτης κινδύνου", "Risk Score")} value={notLive ? "—" : `${selectedZone.risk}/100`} tone={!notLive && selectedZone.risk >= 80 ? "danger" : "warn"} />
+          <Metric icon={Gauge} label={t("Δείκτης κινδύνου", "Risk score")} value={notLive ? "—" : `${selectedZone.risk}/100`} tone={!notLive && selectedZone.risk >= 80 ? "danger" : "warn"} />
           <Metric
             icon={Waves}
-            label={t("Θερμοκρασία SST", "Sea temp (SST)")}
+            label={t("Θερμοκρασία θάλασσας (SST)", "Sea temperature (SST)")}
             value={selectedZone.sst != null ? `${selectedZone.sst.toFixed(1)}°C` : "—"}
             tone={selectedZone.sst != null && selectedZone.sst >= 24 ? "danger" : "default"}
           />
@@ -862,8 +867,8 @@ function App() {
             </div>
             <p className="map-source-note">
               <span className="gbif-dot" aria-hidden="true" /> {t(
-                `Γαλάζιες κουκκίδες = πραγματικές καταγραφές GBIF (${mapPoints.length}). Κύκλοι = ζώνες με ζωντανό Risk Score.`,
-                `Blue dots = real GBIF records (${mapPoints.length}). Circles = zones with a live Risk Score.`
+                `Γαλάζιες κουκκίδες = πραγματικές καταγραφές GBIF (${mapPoints.length}). Κύκλοι = ζώνες με ζωντανό Δείκτη κινδύνου.`,
+                `Blue dots = real GBIF records (${mapPoints.length}). Circles = zones with a live risk score.`
               )}
             </p>
 
@@ -1468,7 +1473,7 @@ function ShareButton({ zone }) {
   const { t, lang } = useLang();
   const [copied, setCopied] = useState(false);
   const share = async () => {
-    const baseUrl = "https://evaggelos77.github.io/sea-guard-ai/";
+    const baseUrl = "https://lagokefalos.evlabsai.gr/";
     const param = zone.id === "__search" ? `q=${encodeURIComponent(zone.area)}` : `zone=${zone.id}`;
     const url = `${baseUrl}?${param}&lang=${lang}`;
     const text =
@@ -1499,7 +1504,7 @@ function QrButton({ zone }) {
   const { t, lang } = useLang();
   const [open, setOpen] = useState(false);
   const [dataUrl, setDataUrl] = useState("");
-  const link = `https://evaggelos77.github.io/sea-guard-ai/?${
+  const link = `https://lagokefalos.evlabsai.gr/?${
     zone.id === "__search" ? `q=${encodeURIComponent(zone.area)}` : `zone=${zone.id}`
   }&lang=${lang}`;
   useEffect(() => {
@@ -2045,7 +2050,7 @@ function BrandLogo3D() {
   }, []);
 
   return (
-    <div className="brand-logo-3d" ref={mountRef} aria-label={t("Τρισδιάστατο λογότυπο EV Sea Guard AI", "EV Sea Guard AI 3D logo")}>
+    <div className="brand-logo-3d" ref={mountRef} aria-label={t("Τρισδιάστατο λογότυπο EV SEA GUARD AI", "EV SEA GUARD AI 3D logo")}>
       <span>EV</span>
     </div>
   );
@@ -2088,7 +2093,7 @@ function AreaSearchPanel({
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={t("π.χ. Ρόδος, Κως, Ηράκλειο, Χαλκιδική", "e.g. Rhodes, Kos, Crete, Santorini")}
+            placeholder={t("π.χ. Ρόδος, Κως, Ηράκλειο, Χαλκιδική", "e.g. Rhodes, Kos, Heraklion, Halkidiki")}
             aria-label={t("Περιοχή ή παραλία", "Area or beach")}
           />
         </label>
@@ -2576,11 +2581,11 @@ function RiskLegend() {
   const { t } = useLang();
   return (
     <div className="legend" aria-label={t("Υπόμνημα κινδύνου", "Risk legend")}>
-      <span><i style={{ background: "#2fa66a" }} />{t("Χαμηλή", "Low")}</span>
-      <span><i style={{ background: "#e6c84f" }} />{t("Μέτρια", "Moderate")}</span>
-      <span><i style={{ background: "#f08c2e" }} />{t("Αυξημένη", "Elevated")}</span>
-      <span><i style={{ background: "#e73d3d" }} />Hotspot</span>
-      <span><i style={{ background: "#111" }} />{t("Σοβαρό", "Severe")}</span>
+      <span><i style={{ background: "#2fa66a" }} />{t("Χαμηλός", "Low")}</span>
+      <span><i style={{ background: "#e6c84f" }} />{t("Μέτριος", "Moderate")}</span>
+      <span><i style={{ background: "#f08c2e" }} />{t("Μέτριος προς υψηλός", "Moderate-high")}</span>
+      <span><i style={{ background: "#e73d3d" }} />{t("Υψηλός", "High")}</span>
+      <span><i style={{ background: "#c0202a" }} />{t("Κρίσιμος", "Critical")}</span>
     </div>
   );
 }
@@ -2685,7 +2690,7 @@ function HomePanel() {
         <p>
           {t(
             "Χωροκατακτητικό λεσσεψιανό είδος που έχει εξαπλωθεί στις ελληνικές θάλασσες. Δαγκώνει δίχτυα, παραγάδια και ψάρια, και είναι επικίνδυνα δηλητηριώδης για τον άνθρωπο λόγω τετροδοτοξίνης. Η εφαρμογή συνδυάζει πραγματική θερμοκρασία θάλασσας (SST), πραγματικές καταγραφές του είδους (GBIF) και αναφορές πολιτών/αλιέων για να δείχνει περιοχές αυξημένης πιθανότητας παρουσίας.",
-            "An invasive Lessepsian species that has spread across the Greek seas. It bites nets, long-lines and fish, and is dangerously poisonous to humans due to tetrodotoxin. The app combines real sea-surface temperature (SST), real species records (GBIF) and citizen/fisherman reports to show areas of higher likelihood of presence."
+            "An invasive Lessepsian species that has spread across the Greek seas. It bites through nets, long-lines and fish, and is dangerously poisonous to humans because of its tetrodotoxin. The app combines real sea-surface temperature (SST), real species records (GBIF) and citizen/fisherman reports to show areas of higher likelihood of presence."
           )}
         </p>
       </article>
@@ -2825,10 +2830,10 @@ function RiskEnginePanel({ selectedZone, sightings, catches, forecast }) {
       <article className="info-panel wide">
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">{t("Lagokefalos Risk Engine · ζωντανός υπολογισμός", "Lagokefalos Risk Engine · live calculation")}</p>
+            <p className="eyebrow">{t("Μηχανή κινδύνου λαγοκέφαλου · ζωντανός υπολογισμός", "Pufferfish Risk Engine · live calculation")}</p>
             <h2>{notLive
               ? t(`${selectedZone.area} — δεν φορτώθηκε`, `${selectedZone.area} — not loaded`)
-              : t(`Δείκτης κινδύνου ${selectedZone.risk}/100 για ${selectedZone.area}`, `Risk Score ${selectedZone.risk}/100 for ${selectedZone.area}`)}</h2>
+              : t(`Δείκτης κινδύνου ${selectedZone.risk}/100 για ${selectedZone.area}`, `Risk score ${selectedZone.risk}/100 for ${selectedZone.area}`)}</h2>
           </div>
           <Gauge size={24} aria-hidden="true" />
         </div>
@@ -3143,12 +3148,19 @@ const MONITOR_REGIONS = [
   "Δωδεκάνησα", "Κυκλάδες", "Κρήτη", "Β. Αιγαίο", "Σποράδες",
   "Ιόνιο", "Χαλκιδική", "Θράκη", "Εύβοια", "Αττική", "Πελοπόννησος",
 ];
+const REGION_EN = {
+  "Δωδεκάνησα": "Dodecanese", "Κυκλάδες": "Cyclades", "Κρήτη": "Crete",
+  "Β. Αιγαίο": "N. Aegean", "Σποράδες": "Sporades", "Ιόνιο": "Ionian",
+  "Χαλκιδική": "Halkidiki", "Θράκη": "Thrace", "Εύβοια": "Euboea",
+  "Αττική": "Attica", "Πελοπόννησος": "Peloponnese",
+};
+const regionLabel = (r, lang) => (lang === "en" ? REGION_EN[r] || r : r);
 
 function monitorLevel(risk, lang) {
   if (risk >= 82) return lang === "en" ? "CRITICAL" : "ΚΡΙΣΙΜΟΣ";
   if (risk >= 66) return lang === "en" ? "HIGH" : "ΥΨΗΛΟΣ";
-  if (risk >= 48) return lang === "en" ? "MODERATE" : "ΜΕΤΡΙΟΣ";
-  if (risk >= 30) return lang === "en" ? "LOW-MOD" : "ΧΑΜΗΛΟΣ-ΜΕΤΡ.";
+  if (risk >= 48) return lang === "en" ? "MODERATE-HIGH" : "ΜΕΤΡΙΟΣ-ΥΨΗΛΟΣ";
+  if (risk >= 30) return lang === "en" ? "MODERATE" : "ΜΕΤΡΙΟΣ";
   return lang === "en" ? "LOW" : "ΧΑΜΗΛΟΣ";
 }
 
@@ -3218,7 +3230,7 @@ function AuthorityMonitor({ zones, realPoints, sightings, onExit, onRefresh }) {
           <span>{t("Περιοχή ευθύνης", "Area of responsibility")}</span>
           <select value={region} onChange={(e) => setRegion(e.target.value)}>
             {MONITOR_REGIONS.map((r) => (
-              <option key={r} value={r}>{r}</option>
+              <option key={r} value={r}>{regionLabel(r, lang)}</option>
             ))}
           </select>
         </label>
@@ -3234,7 +3246,7 @@ function AuthorityMonitor({ zones, realPoints, sightings, onExit, onRefresh }) {
 
       <div className="ops-body">
         <section className="ops-status" style={{ borderColor: statusColor }}>
-          <p className="ops-status-eyebrow">{t("ΚΑΤΑΣΤΑΣΗ ΠΕΡΙΟΧΗΣ", "AREA STATUS")} — {region}</p>
+          <p className="ops-status-eyebrow">{t("ΚΑΤΑΣΤΑΣΗ ΠΕΡΙΟΧΗΣ", "AREA STATUS")} — {regionLabel(region, lang)}</p>
           {top && top.live !== false ? (
             <>
               <div className="ops-status-main">
