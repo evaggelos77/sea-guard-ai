@@ -6,6 +6,19 @@ import { VitePWA } from "vite-plugin-pwa";
 // τοπικό dev + tunnel (server.cjs σερβίρει στο root) → base "/".
 export default defineConfig({
   base: process.env.GH_PAGES ? "/sea-guard-ai/" : "/",
+  build: {
+    // Ξεχωριστά cacheable vendor chunks: το βαρύ three/leaflet/d3 κατεβαίνει
+    // παράλληλα και ΜΕΝΕΙ στην cache του κινητού όταν αλλάζει μόνο ο κώδικας της εφαρμογής.
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          three: ["three"],
+          leaflet: ["leaflet", "react-leaflet"],
+          geo: ["d3-geo"],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({

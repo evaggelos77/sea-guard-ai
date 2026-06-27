@@ -2234,3 +2234,60 @@ html { font-size: calc(100% * var(--ui-scale)); }
   .a11y-bar { flex-wrap: wrap; }
   .a11y-btn span { display: none; }
 }
+
+/* ============================================================
+   Σελίδα «Πηγές & Μεθοδολογία» (διαφάνεια / αξιοπιστία)
+   ============================================================ */
+.about-panel .about-lead {
+  font-size: 1rem; color: #3a5560; line-height: 1.55; margin: 4px 0 18px;
+}
+.about-block { margin-bottom: 20px; }
+.about-block h4 {
+  font-family: "Commissioner", sans-serif; font-size: 1.02rem; color: #0b3d4d;
+  margin: 0 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e3eef1;
+}
+.about-block p { font-size: 0.92rem; line-height: 1.55; color: #43616b; margin: 0; }
+.formula-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.formula-chip {
+  display: inline-flex; align-items: center; padding: 7px 12px; border-radius: 999px;
+  font-size: 0.82rem; font-weight: 800; color: #0b3d4d; border: 1.5px solid transparent;
+}
+.formula-chip.sst { background: rgba(45,181,201,0.16); border-color: rgba(45,181,201,0.4); }
+.formula-chip.occ { background: rgba(177,79,255,0.14); border-color: rgba(177,79,255,0.4); }
+.formula-chip.com { background: rgba(47,166,106,0.16); border-color: rgba(47,166,106,0.4); }
+.source-links { list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; }
+.source-links li {
+  font-size: 0.9rem; line-height: 1.45; color: #43616b;
+  padding-left: 14px; border-left: 3px solid var(--aqua);
+}
+.source-links a { color: #115e73; font-weight: 800; text-decoration: none; border-bottom: 1.5px solid rgba(17,94,115,0.3); }
+.source-links a:hover { border-bottom-color: #115e73; }
+.about-disclaimer {
+  display: flex; gap: 12px; align-items: flex-start; margin: 20px 0 16px;
+  padding: 14px 16px; border-radius: 14px;
+  background: rgba(216,66,66,0.07); border: 1.5px solid rgba(216,66,66,0.28);
+}
+.about-disclaimer svg { flex: 0 0 auto; color: #c0202a; margin-top: 1px; }
+.about-disclaimer strong { display: block; color: #8a1f1f; font-size: 0.95rem; margin-bottom: 3px; }
+.about-disclaimer p { margin: 0; font-size: 0.88rem; line-height: 1.5; color: #7d2a2a; }
+.about-contact {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  font-size: 0.9rem; color: #5f7480; margin-bottom: 12px;
+}
+.about-contact a { color: #115e73; font-weight: 800; text-decoration: none; border-bottom: 1.5px solid rgba(17,94,115,0.3); }
+.footer-about-link {
+  display: inline-flex; align-items: center; gap: 7px; margin: 8px 0;
+  padding: 8px 14px; border-radius: 999px; font-size: 0.84rem; font-weight: 800;
+  color: #bdf5ff; background: rgba(255,255,255,0.08);
+  border: 1.5px solid rgba(255,255,255,0.22); cursor: pointer; transition: all 0.15s;
+}
+.footer-about-link:hover { background: rgba(255,255,255,0.16); border-color: #bdf5ff; }
+:root[data-contrast="on"] .footer-about-link { background:#000 !important; color:#ffd000 !important; border-color:#ffd000 !important; }
+:root[data-contrast="on"] .about-block h4,
+:root[data-contrast="on"] .formula-chip,
+:root[data-contrast="on"] .source-links a,
+:root[data-contrast="on"] .about-contact a { color:#ffd000 !important; }
+:root[data-contrast="on"] .about-disclaimer { background:#2a0606 !important; border-color:#ff5a5a !important; }
+:root[data-contrast="on"] .about-disclaimer strong,
+:root[data-contrast="on"] .about-disclaimer p,
+:root[data-contrast="on"] .about-disclaimer svg { color:#ff8a8a !important; }

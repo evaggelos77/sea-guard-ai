@@ -1040,6 +1040,7 @@ function App() {
           {activePanel === "admin" && (
             <AdminPanel sightings={sightings} updateSighting={updateSighting} pendingSightings={pendingSightings} verifiedSightings={verifiedSightings} />
           )}
+          {activePanel === "about" && <AboutPanel />}
         </section>
 
         <footer className="ev-footer">
@@ -1056,6 +1057,10 @@ function App() {
               "Digital marine-protection infrastructure for the pufferfish. Real data: Open-Meteo Marine + GBIF. Not a substitute for official information — in an emergency call 112."
             )}
           </p>
+          <button type="button" className="footer-about-link" onClick={() => goToPanel("about")}>
+            <Database size={15} aria-hidden="true" />
+            {t("Πηγές & Μεθοδολογία", "Sources & Methodology")}
+          </button>
           <p className="ev-footer-copy">© {new Date().getFullYear()} EV LABS AI — {t("Όλα τα δικαιώματα κατοχυρωμένα.", "All rights reserved.")}</p>
         </footer>
       </main>
@@ -1072,6 +1077,100 @@ function App() {
         />
       )}
     </div>
+  );
+}
+
+function AboutPanel() {
+  const { t } = useLang();
+  const spoken = t(
+    "Πηγές και μεθοδολογία. Ο δείκτης κινδύνου συνδυάζει 45 τοις εκατό θερμοκρασία θάλασσας, 35 τοις εκατό πραγματικές επιστημονικές καταγραφές και 20 τοις εκατό αναφορές κοινότητας. Τα δεδομένα είναι πραγματικά, από Open-Meteo Marine και GBIF. Η εφαρμογή είναι εργαλείο ενημέρωσης, δεν είναι επίσημη αρχή. Σε επείγον κάλεσε 112. Ποτέ μην τρως ή αγγίζεις άγνωστο ψάρι.",
+    "Sources and methodology. The risk score combines 45 percent sea temperature, 35 percent real scientific records and 20 percent community reports. The data is real, from Open-Meteo Marine and GBIF. This app is an information tool, not an official authority. In an emergency call 112. Never eat or touch an unfamiliar fish."
+  );
+  return (
+    <article className="info-panel wide about-panel">
+      <header className="panel-heading">
+        <div>
+          <p className="eyebrow">{t("Διαφάνεια", "Transparency")}</p>
+          <h3>{t("Πηγές & Μεθοδολογία", "Sources & Methodology")}</h3>
+        </div>
+        <Database size={22} aria-hidden="true" />
+      </header>
+
+      <p className="about-lead">
+        {t(
+          "Κάθε αριθμός εδώ προέρχεται από πραγματικά, ανοιχτά δεδομένα. Δες πώς υπολογίζουμε τον κίνδυνο, από πού αντλούμε τα στοιχεία και τι ΔΕΝ είμαστε.",
+          "Every number here comes from real, open data. See how we calculate the risk, where the data comes from, and what we are NOT."
+        )}
+      </p>
+
+      <section className="about-block">
+        <h4>{t("Πώς υπολογίζεται ο κίνδυνος", "How the risk is calculated")}</h4>
+        <div className="formula-row">
+          <span className="formula-chip sst">45% · {t("Θερμοκρασία θάλασσας", "Sea temperature")}</span>
+          <span className="formula-chip occ">35% · {t("Επιστημονικές καταγραφές", "Scientific records")}</span>
+          <span className="formula-chip com">20% · {t("Αναφορές κοινότητας", "Community reports")}</span>
+        </div>
+        <p>
+          {t(
+            "Ο λαγοκέφαλος ευνοείται σε θερμά νερά (κορύφωση 22–28°C). Συνδυάζουμε τη ζωντανή θερμοκρασία θάλασσας με τις επιστημονικές καταγραφές παρουσίας και τις αναφορές πολιτών, σε έναν διαφανή σταθμισμένο δείκτη 0–100.",
+            "The pufferfish thrives in warm water (peak 22–28°C). We combine live sea temperature with scientific presence records and citizen reports into a transparent weighted score of 0–100."
+          )}
+        </p>
+      </section>
+
+      <section className="about-block">
+        <h4>{t("Από πού έρχονται τα δεδομένα", "Where the data comes from")}</h4>
+        <ul className="source-links">
+          <li>
+            <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener noreferrer">Open-Meteo Marine</a>
+            {" — "}
+            {t("ζωντανή θερμοκρασία θάλασσας, ρεύματα, κύμα & πρόγνωση 72 ωρών.", "live sea temperature, currents, waves & 72-hour forecast.")}
+          </li>
+          <li>
+            <a href="https://www.gbif.org/species/2407758" target="_blank" rel="noopener noreferrer">GBIF</a>
+            {" — "}
+            {t("πραγματικές επιστημονικές καταγραφές του Lagocephalus sceleratus (κωδικός είδους 2407758).", "real scientific records of Lagocephalus sceleratus (species key 2407758).")}
+          </li>
+          <li>
+            <a href="https://open-meteo.com/en/docs/geocoding-api" target="_blank" rel="noopener noreferrer">Open-Meteo Geocoding</a>
+            {" — "}
+            {t("εύρεση οποιασδήποτε ελληνικής παράκτιας περιοχής.", "lookup for any Greek coastal area.")}
+          </li>
+        </ul>
+      </section>
+
+      <section className="about-block">
+        <h4>{t("Λίγη επιστήμη", "A little science")}</h4>
+        <p>
+          {t(
+            "Ο λαγοκέφαλος (Lagocephalus sceleratus) είναι λεσσεψιανός εισβολέας μέσω της διώρυγας του Σουέζ. 1η μεσογειακή καταγραφή: κόλπος Gökova (ΝΔ Τουρκία), 2003 · ελληνικά νερά ~2005. Περιέχει τετροδοτοξίνη — θανατηφόρα, ανθεκτική στο μαγείρεμα.",
+            "The pufferfish (Lagocephalus sceleratus) is a Lessepsian invader via the Suez Canal. First Mediterranean record: Gökova Bay (SW Turkey), 2003 · Greek waters ~2005. It contains tetrodotoxin — lethal and heat-resistant."
+          )}
+        </p>
+      </section>
+
+      <div className="about-disclaimer">
+        <AlertTriangle size={20} aria-hidden="true" />
+        <div>
+          <strong>{t("Σημαντικό", "Important")}</strong>
+          <p>
+            {t(
+              "Η εφαρμογή είναι εργαλείο ενημέρωσης — ΔΕΝ είναι επίσημη αρχή και δεν αντικαθιστά τις οδηγίες των αρχών. Σε επείγον κάλεσε 112. ΠΟΤΕ μην τρως ή αγγίζεις άγνωστο ψάρι.",
+              "This app is an information tool — it is NOT an official authority and does not replace guidance from the authorities. In an emergency call 112. NEVER eat or touch an unfamiliar fish."
+            )}
+          </p>
+        </div>
+      </div>
+
+      <div className="about-contact">
+        <span>{t("Επικοινωνία", "Contact")}:</span>
+        <a href="mailto:info@evlabsai.gr">info@evlabsai.gr</a>
+        <span aria-hidden="true">·</span>
+        <a href="https://evlabsai.gr" target="_blank" rel="noopener noreferrer">evlabsai.gr</a>
+      </div>
+
+      <ReadAloudButton text={spoken} compact />
+    </article>
   );
 }
 
