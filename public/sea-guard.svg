@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="EV SEA GUARD AI">
+  <rect width="128" height="128" fill="#0b3d4d"/>
+  <circle cx="64" cy="64" r="44" fill="none" stroke="#8ff5ff" stroke-width="7"/>
+  <path d="M24 75c12-11 25-11 39 0s28 11 41 0" fill="none" stroke="#bdf5ff" stroke-width="7" stroke-linecap="round"/>
+  <path d="M36 56c14-14 33-18 56-12 3 1 6 4 7 7-13 6-26 10-38 10-9 0-17-2-25-5z" fill="#ffd36a"/>
+  <circle cx="81" cy="49" r="4" fill="#0b3d4d"/>
+  <path d="M35 54l-10-9v21z" fill="#ffd36a"/>
+</svg>

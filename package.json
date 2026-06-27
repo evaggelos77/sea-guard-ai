@@ -1,0 +1,25 @@
+{
+  "name": "ev-sea-guard-ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "d3-geo": "^3.1.1",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-leaflet": "^4.2.1",
+    "three": "^0.165.0",
+    "vite": "^6.0.7"
+  },
+  "devDependencies": {
+    "vite-plugin-pwa": "^1.3.0"
+  }
+}
