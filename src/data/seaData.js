@@ -165,11 +165,13 @@ export async function fetchOccurrences(lat, lon, signal, halfDeg = 0.7) {
 // Πραγματικά σημεία GBIF για ΟΛΗ την Ελλάδα (paginated — έως pages×300).
 // Χρησιμοποιούνται και για τον χάρτη ΚΑΙ για υπολογισμό παρουσίας ανά ζώνη (binning),
 // ώστε να μη χρειάζονται δεκάδες κλήσεις GBIF με πολλές ζώνες.
+// Παράθυρο ΑΚΡΙΒΩΣ 3 ετών ώστε να ταιριάζει με την ετικέτα «καταγραφές/3ετία»
+// και να δείχνει την ΠΡΟΣΦΑΤΗ (ξαφνική) εμφάνιση του είδους.
 export async function fetchOccurrencePoints(signal, pages = 3) {
   const yNow = new Date().getFullYear();
   const base =
     `https://api.gbif.org/v1/occurrence/search?taxonKey=${LAGOCEPHALUS_TAXON_KEY}&hasCoordinate=true` +
-    `&decimalLatitude=34,42&decimalLongitude=19,30&year=${yNow - 6},${yNow}&limit=300`;
+    `&decimalLatitude=34,42&decimalLongitude=19,30&year=${yNow - 3},${yNow}&limit=300`;
   const out = [];
   for (let p = 0; p < pages; p++) {
     const res = await fetch(`${base}&offset=${p * 300}`, { signal });

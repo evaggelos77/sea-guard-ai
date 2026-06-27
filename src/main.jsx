@@ -963,7 +963,13 @@ function App() {
               </span>
             </div>
             {selectedZone.confirmed && (
-              <div className="confirmed-flag">
+              <div
+                className="confirmed-flag"
+                title={t(
+                  `${selectedZone.occRecent} επιβεβαιωμένες επιστημονικές καταγραφές κοντά εδώ τα τελευταία 3 χρόνια (πηγή: GBIF).`,
+                  `${selectedZone.occRecent} confirmed scientific records near here in the last 3 years (source: GBIF).`
+                )}
+              >
                 <span className="confirmed-dot" aria-hidden="true" />
                 {t("Επιβεβαιωμένη παρουσία λαγοκέφαλου", "Confirmed pufferfish presence")}
                 <b>{selectedZone.occRecent}</b>
@@ -1647,7 +1653,13 @@ function LiveDataBar({ status, error, lastUpdated, selectedZone, pointsCount, on
           </span>
         )}
         {selectedZone?.occRecent != null && status === "ready" && (
-          <span className="live-chip">
+          <span
+            className="live-chip"
+            title={t(
+              "Επιβεβαιωμένες επιστημονικές καταγραφές του λαγοκέφαλου κοντά σε αυτή την περιοχή τα τελευταία 3 χρόνια (πηγή: GBIF).",
+              "Confirmed scientific records of the pufferfish near this area in the last 3 years (source: GBIF)."
+            )}
+          >
             <Fish size={14} aria-hidden="true" /> {selectedZone.occRecent} {t("καταγραφές/3ετία", "records/3y")}
           </span>
         )}
