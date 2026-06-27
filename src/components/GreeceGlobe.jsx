@@ -197,7 +197,7 @@ export default function GreeceGlobe({ zones = [], selectedZone, onSelectZone, re
             className="globe-svg is-static"
             viewBox={`0 0 ${W} ${H}`}
             role="application"
-            aria-label="Τρισδιάστατη υδρόγειος εστιασμένη στις ελληνικές θάλασσες"
+            aria-label={t("Τρισδιάστατη υδρόγειος εστιασμένη στις ελληνικές θάλασσες", "3D globe focused on the Greek seas")}
             aria-describedby="globe-help"
           >
             <defs>

@@ -70,11 +70,13 @@ import { A11yProvider, useA11y } from "./a11y.jsx";
 const riskZones = BASE_ZONES.map((z) => ({
   risk: 38,
   level: "Υπό φόρτωση",
-  color: "#5f7480",
+  color: "#8a99a0",
   reports48h: 0,
   satellite: "Φόρτωση δεδομένων…",
+  satelliteEn: "Loading data…",
   lastReport: "—",
   recommendation: "Φόρτωση ζωντανών δεδομένων…",
+  recommendationEn: "Loading live data…",
   kg7d: 0,
   bites: 0,
   ...z,
@@ -364,14 +366,14 @@ function App() {
       setLastUpdated(new Date());
       if (ok === 0) {
         setLiveStatus("error");
-        setLiveError("Δεν ήταν δυνατή η σύνδεση με τις πηγές δεδομένων. Εμφανίζονται demo τιμές.");
+        setLiveError(t("Δεν ήταν δυνατή η σύνδεση με τις πηγές δεδομένων. Πάτησε «Ανανέωση» για να ξαναδοκιμάσεις.", "Couldn't reach the data sources. Tap “Refresh” to try again."));
       } else {
         setLiveStatus("ready");
       }
     } catch (e) {
       if (aliveRef.current) {
         setLiveStatus("error");
-        setLiveError("Σφάλμα φόρτωσης ζωντανών δεδομένων. Εμφανίζονται demo τιμές.");
+        setLiveError(t("Σφάλμα φόρτωσης ζωντανών δεδομένων. Πάτησε «Ανανέωση» για να ξαναδοκιμάσεις.", "Error loading live data. Tap “Refresh” to try again."));
       }
     }
   }, []);
@@ -438,7 +440,16 @@ function App() {
       });
       // 🟣 «Επιβεβαιωμένη παρουσία»: υπάρχουν πραγματικές καταγραφές GBIF στην 3ετία
       const confirmed = (computed.occRecent || 0) > 0;
-      return { ...zone, ...computed, confirmed, live: true };
+      // «live» μόνο αν έχουμε ΠΡΑΓΜΑΤΙΚΟ σήμα (SST ή καταγραφή). Αλλιώς δεν δείχνουμε
+      // εφευρεμένο σκορ — η ζώνη μένει γκρι «Δεν φορτώθηκε».
+      const hasSignal = raw.marine?.sst != null || (computed.occRecent || 0) > 0;
+      return {
+        ...zone,
+        ...computed,
+        confirmed,
+        live: hasSignal,
+        ...(hasSignal ? {} : { color: "#8a99a0" }),
+      };
     });
   }, [rawByZone, sightings, catches]);
 
@@ -477,15 +488,18 @@ function App() {
 
   // Επίπεδο κινδύνου δίγλωσσο (EN από το risk score, EL από το έτοιμο label)
   const lvl = (z) => {
+    if (!z.live)
+      return liveStatus === "loading"
+        ? lang === "el" ? "Φόρτωση…" : "Loading…"
+        : lang === "el" ? "Δεν φορτώθηκε" : "Not loaded";
     if (lang === "el") return z.level;
-    if (!z.live) return "Loading…";
     const r = z.risk;
     return r >= 82 ? "Critical" : r >= 66 ? "High" : r >= 48 ? "Moderate-high" : r >= 30 ? "Moderate" : "Low";
   };
   const verifiedSightings = sightings.filter((item) => item.status === "verified");
   const pendingSightings = sightings.filter((item) => item.status === "pending");
   const totalKg = catches.reduce((sum, item) => sum + Number(item.kg || 0), 0);
-  const severeZones = displayZones.filter((zone) => zone.risk >= 80).length;
+  const severeZones = displayZones.filter((zone) => zone.live && zone.risk >= 80).length;
   const handleSelectZone = useCallback((zoneId) => setSelectedZoneId(zoneId), []);
   const forecast = useMemo(
     () => selectedZone.forecast || buildForecast(selectedZone, sightings, catches),
@@ -515,7 +529,7 @@ function App() {
       setUserPosition([36.893, 27.288]);
       setSelectedZoneId("kos");
       setAreaQuery("Κως");
-      setAreaSearchNotice("Χρησιμοποιούμε demo θέση κοντά στην Κω.");
+      setAreaSearchNotice(t("Η συσκευή δεν δίνει τοποθεσία. Δείχνουμε την Κω ως παράδειγμα.", "Your device has no location. Showing Kos as an example."));
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -525,13 +539,13 @@ function App() {
         const nearest = nearestZone(coords);
         setSelectedZoneId(nearest.id);
         setAreaQuery(nearest.area);
-        setAreaSearchNotice(`Βρέθηκε κοντινή ζώνη: ${nearest.area}.`);
+        setAreaSearchNotice(t(`Βρέθηκε κοντινή ζώνη: ${nearest.area}.`, `Nearest zone found: ${nearest.area}.`));
       },
       () => {
         setUserPosition([36.893, 27.288]);
         setSelectedZoneId("kos");
         setAreaQuery("Κως");
-        setAreaSearchNotice("Δεν πήραμε GPS. Δείχνουμε demo αποτέλεσμα για Κω.");
+        setAreaSearchNotice(t("Δεν πήραμε τοποθεσία (GPS). Δείχνουμε την Κω ως παράδειγμα.", "Couldn't get your location (GPS). Showing Kos as an example."));
       },
       { enableHighAccuracy: true, timeout: 4500 }
     );
@@ -549,23 +563,31 @@ function App() {
       const liveMatch = liveZones.find((z) => z.id === match.id) || match;
       setSelectedZoneId(match.id);
       setAreaQuery(match.area);
-      setAreaSearchNotice(`Αποτέλεσμα για ${match.area}: Risk Score ${liveMatch.risk}/100.`);
+      const r = liveMatch.live === false || liveMatch.risk == null ? null : liveMatch.risk;
+      setAreaSearchNotice(
+        r == null
+          ? t(`Φόρτωση δεδομένων για ${match.area}…`, `Loading data for ${match.area}…`)
+          : t(`Αποτέλεσμα για ${match.area}: Δείκτης κινδύνου ${r}/100.`, `Result for ${match.area}: Risk score ${r}/100.`)
+      );
       setActivePanel("map");
       return;
     }
 
-    // 2) Geocoding fallback — ΟΠΟΙΑΔΗΠΟΤΕ ελληνική περιοχή/παραλία
-    setAreaSearchNotice(`Αναζήτηση «${q}»…`);
+    // 2) Geocoding fallback — ΟΠΟΙΑΔΗΠΟΤΕ ελληνική παράκτια περιοχή/παραλία
+    setAreaSearchNotice(t(`Αναζήτηση «${q}»…`, `Searching "${q}"…`));
     try {
       const geo = await geocodeGreece(q);
       if (!geo) {
-        setAreaSearchNotice(`Δεν βρέθηκε «${q}». Δοκίμασε όνομα παράκτιας περιοχής ή νησιού της Ελλάδας.`);
+        setAreaSearchNotice(t(`Δεν βρέθηκε «${q}». Δοκίμασε όνομα παράκτιας περιοχής ή νησιού της Ελλάδας.`, `No match for "${q}". Try a Greek coastal area or island name.`));
         return;
       }
-      const [marine, recent] = await Promise.all([
-        fetchMarine(geo.lat, geo.lon).catch(() => null),
-        Promise.resolve(countPointsNear(realPoints, geo.lat, geo.lon)),
-      ]);
+      const marine = await fetchMarine(geo.lat, geo.lon).catch(() => null);
+      // Απόρριψη μη-παράκτιων σημείων: χωρίς θαλάσσια SST δεν υπάρχει «θαλάσσιος κίνδυνος»
+      if (!marine || marine.sst == null) {
+        setAreaSearchNotice(t(`Το «${geo.name}» δεν φαίνεται παράκτια περιοχή. Δοκίμασε παραλία, λιμάνι ή νησί.`, `"${geo.name}" doesn't look like a coastal area. Try a beach, port or island.`));
+        return;
+      }
+      const recent = countPointsNear(realPoints, geo.lat, geo.lon);
       const computed = computeLiveZone({ marine, occ: { recent, total: recent } });
       const result = {
         id: "__search",
@@ -582,10 +604,10 @@ function App() {
       setSearchResult(result);
       setSelectedZoneId("__search");
       setAreaQuery(geo.name);
-      setAreaSearchNotice(`Αποτέλεσμα για ${geo.name}: Risk Score ${computed.risk}/100.`);
+      setAreaSearchNotice(t(`Αποτέλεσμα για ${geo.name}: Δείκτης κινδύνου ${computed.risk}/100.`, `Result for ${geo.name}: Risk score ${computed.risk}/100.`));
       setActivePanel("map");
     } catch {
-      setAreaSearchNotice("Δεν ήταν δυνατή η αναζήτηση αυτή τη στιγμή. Δοκίμασε ξανά.");
+      setAreaSearchNotice(t("Δεν ήταν δυνατή η αναζήτηση αυτή τη στιγμή. Δοκίμασε ξανά.", "Search isn't available right now. Please try again."));
     }
   }
 
@@ -595,7 +617,12 @@ function App() {
     setSearchResult(null);
     setSelectedZoneId(zone.id);
     setAreaQuery(zone.area);
-    setAreaSearchNotice(`Αποτέλεσμα για ${zone.area}: Risk Score ${zone.risk}/100.`);
+    const r = zone.live === false || zone.risk == null ? null : zone.risk;
+    setAreaSearchNotice(
+      r == null
+        ? t(`Φόρτωση δεδομένων για ${zone.area}…`, `Loading data for ${zone.area}…`)
+        : t(`Αποτέλεσμα για ${zone.area}: Δείκτης κινδύνου ${r}/100.`, `Result for ${zone.area}: Risk score ${r}/100.`)
+    );
     setActivePanel("map");
   }
 
@@ -691,7 +718,7 @@ function App() {
 
   return (
     <div className="app-shell">
-      <aside className="sidebar" aria-label="Κύρια πλοήγηση">
+      <aside className="sidebar" aria-label={t("Κύρια πλοήγηση", "Main navigation")}>
         <div className="brand-block">
           <div className="brand-mark">
             <Waves size={23} aria-hidden="true" />
@@ -943,7 +970,7 @@ function App() {
               </div>
             )}
             <div className="risk-score">
-              <span>{selectedZone.risk}</span>
+              <span>{selectedZone.live === false ? "—" : selectedZone.risk}</span>
               <small>/100</small>
             </div>
             <SafetyVerdict zone={selectedZone} />
@@ -1489,7 +1516,7 @@ function swimVerdict(risk, t) {
 
 function SafetyVerdict({ zone }) {
   const { t, lang } = useLang();
-  if (!zone || zone.risk == null) return null;
+  if (!zone || zone.risk == null || zone.live === false) return null;
   const sv = swimVerdict(zone.risk, t);
   const SwimIcon = sv.tone === "ok" ? ShieldCheck : sv.tone === "high" ? AlertTriangle : Info;
   const eatStrong = t("ΠΟΤΕ", "NEVER");
@@ -1665,6 +1692,7 @@ function IntelligenceStrip({ forecast, selectedZone }) {
 
 function BrandLogo3D() {
   const mountRef = useRef(null);
+  const { t } = useLang();
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -1819,7 +1847,7 @@ function BrandLogo3D() {
   }, []);
 
   return (
-    <div className="brand-logo-3d" ref={mountRef} aria-label="3D λογότυπο EV Sea Guard AI">
+    <div className="brand-logo-3d" ref={mountRef} aria-label={t("Τρισδιάστατο λογότυπο EV Sea Guard AI", "EV Sea Guard AI 3D logo")}>
       <span>EV</span>
     </div>
   );
@@ -2647,7 +2675,7 @@ function RiskEnginePanel({ selectedZone, sightings, catches, forecast }) {
 }
 
 function ForecastPanel({ forecast }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   return (
     <article className="info-panel wide">
       <div className="panel-heading">
@@ -2665,7 +2693,7 @@ function ForecastPanel({ forecast }) {
             <div className="bar-track">
               <div style={{ width: `${item.score}%` }} />
             </div>
-            <small>{item.reason}</small>
+            <small>{lang === "en" && item.reasonEn ? item.reasonEn : item.reason}</small>
           </div>
         ))}
       </div>
@@ -2950,9 +2978,10 @@ function AuthorityMonitor({ zones, realPoints, sightings, onExit, onRefresh }) {
     () => zones.filter((z) => z.region === region).sort((a, b) => b.risk - a.risk),
     [zones, region]
   );
-  const top = regionZones[0];
-  const highCount = regionZones.filter((z) => z.risk >= 66).length;
-  const totalRecords = regionZones.reduce((s, z) => s + (z.occRecent || 0), 0);
+  const liveRegionZones = regionZones.filter((z) => z.live);
+  const top = liveRegionZones[0] || regionZones[0];
+  const highCount = liveRegionZones.filter((z) => z.risk >= 66).length;
+  const totalRecords = liveRegionZones.reduce((s, z) => s + (z.occRecent || 0), 0);
   const regionReports = sightings.filter((s) =>
     regionZones.some((z) => (s.area || "").includes(z.area.split(/[ /]/)[0]))
   );
@@ -3324,17 +3353,20 @@ function buildForecast(zone, sightings, catches) {
     {
       label: "24h",
       score: clampScore(base + trend),
-      reason: "Συνδυασμός πρόσφατων αναφορών και θαλάσσιας θερμοκρασίας."
+      reason: "Συνδυασμός πρόσφατων αναφορών και θαλάσσιας θερμοκρασίας.",
+      reasonEn: "Combination of recent reports and sea temperature."
     },
     {
       label: "48h",
       score: clampScore(base + trend * 1.7 - 2),
-      reason: "Μεταφορά πιθανότητας με ρεύματα και ιστορικό hotspots."
+      reason: "Μεταφορά πιθανότητας με ρεύματα και ιστορικό hotspots.",
+      reasonEn: "Probability transported by currents and hotspot history."
     },
     {
       label: "72h",
       score: clampScore(base + trend * 2.2 - 5),
-      reason: "Προβολή κινδύνου με seasonality, βάθος και αλιευτικά δεδομένα."
+      reason: "Προβολή κινδύνου με seasonality, βάθος και αλιευτικά δεδομένα.",
+      reasonEn: "Risk projection using seasonality, depth and fishing data."
     }
   ];
   forecast.confidence = Math.min(96, Math.round(76 + zone.reports48h * 1.2 + Math.min(10, localKg / 25)));
@@ -3346,6 +3378,14 @@ function buildForecast(zone, sightings, catches) {
         : forecast[2].score >= 50
           ? "Προληπτική παρακολούθηση"
           : "Κανονική επιτήρηση";
+  forecast.recommendationEn =
+    forecast[2].score >= 88
+      ? "Immediate alert"
+      : forecast[2].score >= 72
+        ? "Heightened watch"
+        : forecast[2].score >= 50
+          ? "Preventive monitoring"
+          : "Routine surveillance";
   return forecast;
 }
 

@@ -266,9 +266,9 @@ export function computeLiveZone({ marine, occ, localReports = 0, localKg = 0, bi
     return clamp100(100 * (W_SST * sf + W_OCC * sOcc + W_COM * sCom));
   };
   const forecast = [
-    { label: "24h", score: fScore(marine?.sst24), reason: sstReason(marine?.sst24) },
-    { label: "48h", score: fScore(marine?.sst48), reason: sstReason(marine?.sst48) },
-    { label: "72h", score: fScore(marine?.sst72), reason: sstReason(marine?.sst72) },
+    { label: "24h", score: fScore(marine?.sst24), reason: sstReason(marine?.sst24), reasonEn: sstReasonEn(marine?.sst24) },
+    { label: "48h", score: fScore(marine?.sst48), reason: sstReason(marine?.sst48), reasonEn: sstReasonEn(marine?.sst48) },
+    { label: "72h", score: fScore(marine?.sst72), reason: sstReason(marine?.sst72), reasonEn: sstReasonEn(marine?.sst72) },
   ];
   // εμπιστοσύνη AI ~ πληρότητα δεδομένων
   const dataParts = [marine?.sst != null, (occ?.total || 0) > 0, (occ?.recent || 0) > 0];
@@ -313,6 +313,14 @@ function sstReason(t) {
   if (t >= 19) return `Θερμά νερά (${t.toFixed(1)}°C) — αυξημένη δραστηριότητα.`;
   if (t >= 15) return `Χλιαρά νερά (${t.toFixed(1)}°C) — μέτρια δραστηριότητα.`;
   return `Ψυχρά νερά (${t.toFixed(1)}°C) — περιορισμένη παρουσία.`;
+}
+
+function sstReasonEn(t) {
+  if (t == null) return "SST forecast unavailable.";
+  if (t >= 24) return `Very warm water (${t.toFixed(1)}°C) — favourable for pufferfish.`;
+  if (t >= 19) return `Warm water (${t.toFixed(1)}°C) — increased activity.`;
+  if (t >= 15) return `Mild water (${t.toFixed(1)}°C) — moderate activity.`;
+  return `Cold water (${t.toFixed(1)}°C) — limited presence.`;
 }
 
 function describeSst(t) {
