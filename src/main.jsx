@@ -761,11 +761,11 @@ function App() {
           <NavButton icon={ShieldCheck} label="Admin" active={activePanel === "admin"} onClick={() => goToPanel("admin")} />
         </nav>
 
-        <div className="sidebar-credit">
+        <a className="sidebar-credit" href="https://evlabsai.gr" target="_blank" rel="noopener noreferrer" aria-label="EV LABS AI — evlabsai.gr">
           <span className="sidebar-credit-by">powered by</span>
           <strong>EV LABS AI</strong>
           <span className="sidebar-credit-site">evlabsai.gr</span>
-        </div>
+        </a>
       </aside>
 
       <main className="main-surface">
@@ -1057,7 +1057,10 @@ function App() {
             <Waves size={18} aria-hidden="true" />
             <div>
               <strong>EV SEA GUARD AI</strong>
-              <span>{t("Μια δημιουργία της", "Created by")} <b>EV LABS AI</b> · evlabsai.gr</span>
+              <span>
+                {t("Μια δημιουργία της", "Created by")}{" "}
+                <a className="brand-link" href="https://evlabsai.gr" target="_blank" rel="noopener noreferrer"><b>EV LABS AI</b> · evlabsai.gr</a>
+              </span>
             </div>
           </div>
           <p className="ev-footer-note">
