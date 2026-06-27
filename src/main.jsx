@@ -826,6 +826,7 @@ function App() {
         </footer>
       </main>
       <ScrollDots />
+      <LocationAlert zones={displayZones} realPoints={realPoints} />
       <SosButton />
     </div>
   );
@@ -912,6 +913,137 @@ function ScrollDots() {
   );
 }
 
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+// Ειδοποίηση τοποθεσίας: αν ο χρήστης είναι κοντά σε καταγραφή/περιοχή λαγοκέφαλου → ALERT
+function LocationAlert({ zones, realPoints }) {
+  const { t } = useLang();
+  const [enabled, setEnabled] = useState(() => {
+    try {
+      return localStorage.getItem("sg-geo") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const [pos, setPos] = useState(null);
+  const [alert, setAlert] = useState(null);
+  const [dismissed, setDismissed] = useState(false);
+  const watchRef = useRef(null);
+  const lastNotif = useRef(0);
+
+  const enable = async () => {
+    if (!navigator.geolocation) {
+      window.alert(t("Η συσκευή σου δεν υποστηρίζει εντοπισμό θέσης.", "Your device doesn't support location."));
+      return;
+    }
+    try {
+      if ("Notification" in window && Notification.permission === "default") await Notification.requestPermission();
+    } catch {}
+    setEnabled(true);
+    try {
+      localStorage.setItem("sg-geo", "1");
+    } catch {}
+  };
+  const disable = () => {
+    setEnabled(false);
+    setAlert(null);
+    try {
+      localStorage.setItem("sg-geo", "0");
+    } catch {}
+    if (watchRef.current != null) navigator.geolocation.clearWatch(watchRef.current);
+  };
+
+  useEffect(() => {
+    if (!enabled || !navigator.geolocation) return undefined;
+    watchRef.current = navigator.geolocation.watchPosition(
+      (p) => setPos([p.coords.latitude, p.coords.longitude]),
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 }
+    );
+    return () => {
+      if (watchRef.current != null) navigator.geolocation.clearWatch(watchRef.current);
+    };
+  }, [enabled]);
+
+  useEffect(() => {
+    if (!pos) return;
+    let nearRecord = Infinity;
+    for (const pt of realPoints) {
+      const d = haversineKm(pos[0], pos[1], pt.lat, pt.lng);
+      if (d < nearRecord) nearRecord = d;
+    }
+    let nz = null;
+    let nd = Infinity;
+    for (const z of zones) {
+      if (!z.coords) continue;
+      const d = haversineKm(pos[0], pos[1], z.coords[0], z.coords[1]);
+      if (d < nd) {
+        nd = d;
+        nz = z;
+      }
+    }
+    let a = null;
+    if (nearRecord <= 4) a = { level: "record", area: nz?.area, risk: nz?.risk };
+    else if (nz && nz.risk >= 66 && nd <= 25) a = { level: "high", area: nz.area, risk: nz.risk };
+    setAlert(a);
+    if (a) setDismissed(false);
+    if (a && "Notification" in window && Notification.permission === "granted" && Date.now() - lastNotif.current > 600000) {
+      lastNotif.current = Date.now();
+      try {
+        new Notification("EV SEA GUARD AI", {
+          body:
+            a.level === "record"
+              ? t(`⚠️ Λαγοκέφαλος έχει καταγραφεί κοντά σου (${a.area}). Μην αγγίζεις άγνωστα ψάρια.`, `⚠️ Pufferfish recorded near you (${a.area}). Don't touch unfamiliar fish.`)
+              : t(`⚠️ Είσαι σε περιοχή υψηλού κινδύνου λαγοκέφαλου (${a.area}).`, `⚠️ You are in a high-risk pufferfish area (${a.area}).`),
+          icon: "/icon-192.png",
+        });
+      } catch {}
+    }
+  }, [pos, zones, realPoints]);
+
+  return (
+    <>
+      {alert && !dismissed && (
+        <div className={`geo-alert geo-alert--${alert.level}`} role="alert">
+          <AlertTriangle size={22} aria-hidden="true" />
+          <div className="geo-alert-text">
+            <strong>
+              {alert.level === "record"
+                ? t("Προσοχή! Λαγοκέφαλος έχει καταγραφεί κοντά σου", "Warning! Pufferfish recorded near you")
+                : t("Προσοχή! Είσαι σε περιοχή υψηλού κινδύνου", "Warning! You are in a high-risk area")}
+            </strong>
+            <span>
+              {alert.area}
+              {alert.risk != null ? ` · ${alert.risk}/100` : ""} — {t("Μην αγγίζεις άγνωστα ψάρια. Μην τα τρως.", "Don't touch unfamiliar fish. Don't eat them.")}
+            </span>
+          </div>
+          <a href="tel:112" className="geo-alert-sos">112</a>
+          <button type="button" className="geo-alert-x" onClick={() => setDismissed(true)} aria-label={t("Κλείσιμο", "Close")}>
+            <XCircle size={20} />
+          </button>
+        </div>
+      )}
+      <button
+        type="button"
+        className={`geo-toggle ${enabled ? "on" : ""}`}
+        onClick={() => (enabled ? disable() : enable())}
+        aria-pressed={enabled}
+      >
+        <LocateFixed size={15} aria-hidden="true" />
+        {enabled ? t("Ειδοποίηση: ΟΝ", "Alerts: ON") : t("Ειδοποίηση τοποθεσίας", "Location alerts")}
+      </button>
+    </>
+  );
+}
+
 function SosButton() {
   const { t } = useLang();
   const [open, setOpen] = useState(false);
@@ -951,20 +1083,25 @@ function FlyToZone({ zone }) {
 }
 
 function LiveDataBar({ status, error, lastUpdated, selectedZone, pointsCount, onRefresh }) {
+  const { lang, t } = useLang();
   const time = lastUpdated
-    ? lastUpdated.toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" })
+    ? lastUpdated.toLocaleTimeString(lang === "en" ? "en-GB" : "el-GR", { hour: "2-digit", minute: "2-digit" })
     : "—";
   const stateLabel =
-    status === "loading" ? "Σύνδεση με ζωντανές πηγές…" : status === "error" ? "Αδυναμία σύνδεσης — demo τιμές" : "Ζωντανά δεδομένα ενεργά";
+    status === "loading"
+      ? t("Σύνδεση με ζωντανές πηγές…", "Connecting to live sources…")
+      : status === "error"
+        ? t("Αδυναμία σύνδεσης — εκτιμώμενες τιμές", "Connection failed — estimated values")
+        : t("Ζωντανά δεδομένα ενεργά", "Live data active");
   return (
-    <section className={`live-bar live-bar--${status}`} aria-label="Κατάσταση ζωντανών δεδομένων">
+    <section className={`live-bar live-bar--${status}`} aria-label={t("Κατάσταση ζωντανών δεδομένων", "Live data status")}>
       <div className="live-bar-state">
         <span className={`live-dot live-dot--${status}`} aria-hidden="true" />
         <div>
           <strong>{stateLabel}</strong>
           <span>
-            Πηγές: Open-Meteo Marine (SST/ρεύματα) · GBIF (πραγματικές καταγραφές){" "}
-            {status === "ready" && `· ${pointsCount} σημεία · ${time}`}
+            {t("Πηγές", "Sources")}: Open-Meteo Marine (SST{t("/ρεύματα", "/currents")}) · GBIF ({t("πραγματικές καταγραφές", "real records")}){" "}
+            {status === "ready" && `· ${pointsCount} ${t("σημεία", "points")} · ${time}`}
           </span>
         </div>
       </div>
@@ -976,11 +1113,11 @@ function LiveDataBar({ status, error, lastUpdated, selectedZone, pointsCount, on
         )}
         {selectedZone?.occRecent != null && status === "ready" && (
           <span className="live-chip">
-            <Fish size={14} aria-hidden="true" /> {selectedZone.occRecent} καταγραφές/3ετία
+            <Fish size={14} aria-hidden="true" /> {selectedZone.occRecent} {t("καταγραφές/3ετία", "records/3y")}
           </span>
         )}
         <button type="button" className="live-refresh" onClick={onRefresh} disabled={status === "loading"}>
-          <Radar size={15} aria-hidden="true" /> Ανανέωση
+          <Radar size={15} aria-hidden="true" /> {t("Ανανέωση", "Refresh")}
         </button>
       </div>
       {error && <p className="live-bar-error">{error}</p>}
@@ -989,11 +1126,12 @@ function LiveDataBar({ status, error, lastUpdated, selectedZone, pointsCount, on
 }
 
 function IntelligenceStrip({ forecast, selectedZone }) {
+  const { lang, t } = useLang();
   return (
-    <section className="intelligence-strip" aria-label="AI επιχειρησιακή πρόβλεψη">
+    <section className="intelligence-strip" aria-label={t("AI επιχειρησιακή πρόβλεψη", "AI operational forecast")}>
       <article>
         <Radar size={20} aria-hidden="true" />
-        <span>Current risk</span>
+        <span>{t("Τρέχων κίνδυνος", "Current risk")}</span>
         <strong>{selectedZone.risk}/100</strong>
       </article>
       {forecast.map((item) => (
@@ -1005,13 +1143,13 @@ function IntelligenceStrip({ forecast, selectedZone }) {
       ))}
       <article>
         <BrainCircuit size={20} aria-hidden="true" />
-        <span>Model confidence</span>
+        <span>{t("Κάλυψη δεδομένων", "Data coverage")}</span>
         <strong>{forecast.confidence}%</strong>
       </article>
       <article className="decision">
         <Siren size={20} aria-hidden="true" />
-        <span>AI recommendation</span>
-        <strong>{forecast.recommendation}</strong>
+        <span>{t("Σύσταση AI", "AI recommendation")}</span>
+        <strong>{lang === "en" && forecast.recommendationEn ? forecast.recommendationEn : forecast.recommendation}</strong>
       </article>
     </section>
   );
@@ -1286,6 +1424,7 @@ function AreaSearchPanel({
 }
 
 function SeaGuard3D({ selectedZone, forecast, zones, onSelectZone }) {
+  const { t } = useLang();
   const mountRef = useRef(null);
 
   useEffect(() => {
@@ -1478,13 +1617,15 @@ function SeaGuard3D({ selectedZone, forecast, zones, onSelectZone }) {
   }, [selectedZone.id, forecast]);
 
   return (
-    <section className="mission-theater" aria-label="3D δορυφορική σκηνή EV SEA GUARD AI">
+    <section className="mission-theater" aria-label="3D Satellite AI Layer">
       <div className="theater-copy">
-        <p className="eyebrow">3D Satellite AI Layer</p>
-        <h2>Δορυφόροι, θαλάσσια δεδομένα και AI συνεργάζονται σε πραγματικό χρόνο.</h2>
+        <p className="eyebrow">{t("Ζωντανό AI · Δορυφορικά δεδομένα", "Live AI · Satellite data")}</p>
+        <h2>{t("Δες αν κολυμπάς με ασφάλεια — ζωντανά, για κάθε ελληνική παραλία.", "Know if it's safe to swim — live, for every Greek beach.")}</h2>
         <p>
-          Το demo layer δείχνει πώς οι δορυφορικές συνθήκες, οι αναφορές πολιτών, τα κιλά
-          αλιέων και η αναγνώριση εικόνας τροφοδοτούν το Lagokefalos Risk Engine.
+          {t(
+            "Η εφαρμογή που ενώνει πραγματική θερμοκρασία θάλασσας, επιστημονικές καταγραφές και AI για να σε προειδοποιεί για τον δηλητηριώδη λαγοκέφαλο — σε όλη την Ελλάδα.",
+            "The app that combines real sea temperature, scientific records and AI to warn you about the poisonous pufferfish — across all of Greece."
+          )}
         </p>
       </div>
       <div className="theater-stage" ref={mountRef} />
@@ -1698,6 +1839,77 @@ function RiskLegend() {
   );
 }
 
+function InstallGuide() {
+  const { t } = useLang();
+  const [deferred, setDeferred] = useState(null);
+  const [installed, setInstalled] = useState(false);
+  useEffect(() => {
+    const onBip = (e) => {
+      e.preventDefault();
+      setDeferred(e);
+    };
+    const onInstalled = () => setInstalled(true);
+    window.addEventListener("beforeinstallprompt", onBip);
+    window.addEventListener("appinstalled", onInstalled);
+    try {
+      if (window.matchMedia?.("(display-mode: standalone)").matches) setInstalled(true);
+    } catch {}
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onBip);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, []);
+  const doInstall = async () => {
+    if (!deferred) return;
+    deferred.prompt();
+    try {
+      await deferred.userChoice;
+    } catch {}
+    setDeferred(null);
+  };
+  return (
+    <article className="info-panel wide install-guide">
+      <div className="panel-heading">
+        <div>
+          <p className="eyebrow">{t("Εγκατάσταση στο κινητό", "Install on mobile")}</p>
+          <h2>{t("Κατέβασέ το σαν εφαρμογή — δωρεάν", "Get it as an app — free")}</h2>
+        </div>
+        <Download size={24} aria-hidden="true" />
+      </div>
+      {installed ? (
+        <p className="install-ok">✓ {t("Η εφαρμογή είναι ήδη εγκατεστημένη στη συσκευή σου!", "The app is already installed on your device!")}</p>
+      ) : (
+        <>
+          {deferred && (
+            <button type="button" className="primary-action install-now" onClick={doInstall}>
+              <Download size={18} aria-hidden="true" /> {t("Εγκατάσταση τώρα", "Install now")}
+            </button>
+          )}
+          <div className="install-cols">
+            <div>
+              <h4>Android (Chrome)</h4>
+              <ol>
+                <li>{t("Άνοιξε αυτό το link στον Chrome.", "Open this link in Chrome.")}</li>
+                <li>{t("Πάτα το μενού ⋮ (πάνω δεξιά).", "Tap the ⋮ menu (top right).")}</li>
+                <li>{t("Διάλεξε «Εγκατάσταση εφαρμογής» ή «Προσθήκη στην αρχική οθόνη».", "Choose “Install app” or “Add to Home screen”.")}</li>
+              </ol>
+            </div>
+            <div>
+              <h4>iPhone / iPad (Safari)</h4>
+              <ol>
+                <li>{t("Άνοιξε αυτό το link στο Safari.", "Open this link in Safari.")}</li>
+                <li>{t("Πάτα το κουμπί Κοινή χρήση (□↑).", "Tap the Share button (□↑).")}</li>
+                <li>{t("Διάλεξε «Προσθήκη στην Αρχική οθόνη».", "Choose “Add to Home Screen”.")}</li>
+              </ol>
+            </div>
+          </div>
+          <p className="install-note">{t("Θα εμφανιστεί εικονίδιο στην αρχική οθόνη και θα ανοίγει σαν κανονική εφαρμογή — και χωρίς ίντερνετ.", "An icon appears on your home screen and opens like a real app — even offline.")}</p>
+        </>
+      )}
+    </article>
+  );
+}
+
 function HomePanel() {
   const { t } = useLang();
   const safety = [
@@ -1715,6 +1927,7 @@ function HomePanel() {
 
   return (
     <section className="panel-grid">
+      <InstallGuide />
       <article className="info-panel wide danger-banner">
         <div className="panel-heading">
           <div>

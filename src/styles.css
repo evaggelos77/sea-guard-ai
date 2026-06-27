@@ -1864,3 +1864,45 @@ td {
 /* Disclaimer panel (ενημερωτικό εργαλείο) */
 .disclaimer-panel { background: linear-gradient(180deg, rgba(45,181,201,0.06), var(--panel)); }
 .disclaimer-panel .notice-line { margin: 0; font-size: 0.86rem; }
+
+/* ====================== Ειδοποίηση τοποθεσίας (geo alert) ====================== */
+.geo-alert {
+  position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+  z-index: 60; width: min(680px, calc(100% - 24px));
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border-radius: 14px; color: #fff; box-shadow: 0 14px 40px rgba(0,0,0,0.4);
+  animation: geo-pop 0.35s ease both;
+}
+.geo-alert--record { background: linear-gradient(135deg, #e0202a, #9a0f16); }
+.geo-alert--high { background: linear-gradient(135deg, #f07a2e, #c4541a); }
+@keyframes geo-pop { from { opacity: 0; transform: translate(-50%, -12px); } }
+.geo-alert-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.geo-alert-text strong { font-size: 0.98rem; }
+.geo-alert-text span { font-size: 0.82rem; opacity: 0.95; }
+.geo-alert-sos {
+  flex: none; padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,0.2);
+  color: #fff; font-weight: 900; text-decoration: none; border: 1px solid rgba(255,255,255,0.5);
+}
+.geo-alert-x { flex: none; background: transparent; border: 0; color: #fff; opacity: 0.85; padding: 2px; }
+.geo-alert-x:hover { opacity: 1; }
+
+.geo-toggle {
+  position: fixed; right: 14px; bottom: 70px; z-index: 39;
+  display: inline-flex; align-items: center; gap: 6px; padding: 9px 13px; border-radius: 999px;
+  background: rgba(11, 52, 66, 0.92); color: #cfe7ff; border: 1px solid rgba(127, 212, 255, 0.35);
+  font-size: 0.8rem; font-weight: 700; box-shadow: 0 8px 20px rgba(0,0,0,0.28);
+}
+.geo-toggle.on { background: var(--mint); color: #04231c; border-color: var(--mint); }
+.geo-toggle:hover { filter: brightness(1.05); }
+@media (max-width: 600px) { .geo-toggle { bottom: 64px; } }
+
+/* ====================== Οδηγίες εγκατάστασης (install guide) ====================== */
+.install-guide { background: linear-gradient(135deg, rgba(45,181,201,0.08), var(--panel)); border-color: #bfe6ec; }
+.install-now { margin-bottom: 12px; }
+.install-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.install-cols h4 { margin: 0 0 6px; font-size: 0.92rem; color: var(--sea-dark); }
+.install-cols ol { margin: 0; padding-left: 18px; }
+.install-cols li { font-size: 0.86rem; color: var(--ink); margin-bottom: 5px; line-height: 1.35; }
+.install-note { margin: 12px 0 0; font-size: 0.82rem; color: var(--muted); }
+.install-ok { font-size: 1rem; font-weight: 800; color: #1d6b45; }
+@media (max-width: 560px) { .install-cols { grid-template-columns: 1fr; } }

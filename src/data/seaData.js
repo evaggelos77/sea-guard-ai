@@ -234,6 +234,8 @@ export function computeLiveZone({ marine, occ, localReports = 0, localKg = 0, bi
   forecast.confidence = Math.min(97, confidence);
   forecast.recommendation =
     risk >= 82 ? "Άμεση ειδοποίηση" : risk >= 66 ? "Αυξημένη επιτήρηση" : risk >= 48 ? "Προληπτική παρακολούθηση" : "Κανονική επιτήρηση";
+  forecast.recommendationEn =
+    risk >= 82 ? "Immediate alert" : risk >= 66 ? "Heightened watch" : risk >= 48 ? "Preventive monitoring" : "Routine surveillance";
 
   return {
     risk,
