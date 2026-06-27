@@ -1969,3 +1969,54 @@ td {
 .ops-footer { display: flex; justify-content: space-between; gap: 12px; padding: 12px 22px; border-top: 1px solid rgba(127,212,255,0.18); font-size: 0.76rem; color: #9cc0e4; flex-wrap: wrap; }
 
 @media (max-width: 1000px) { .ops-body { grid-template-columns: 1fr; } }
+
+/* ====================== 🟣 ΜΩΒ «Επιβεβαιωμένη παρουσία» (confirmed presence) ====================== */
+.confirmed-dot {
+  display: inline-block; width: 11px; height: 11px; border-radius: 50%; flex: none;
+  background: #b14fff; box-shadow: 0 0 0 3px rgba(177,79,255,0.22);
+}
+.confirmed-flag {
+  display: flex; align-items: center; gap: 8px; margin: 10px 0 0;
+  padding: 8px 12px; border-radius: 10px; font-size: 0.84rem; font-weight: 700;
+  color: #6b1fb3; background: rgba(177,79,255,0.10); border: 1px solid rgba(177,79,255,0.35);
+}
+.confirmed-flag b { margin-left: auto; color: #b14fff; }
+.confirmed-badge {
+  display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; vertical-align: middle;
+  padding: 3px 9px; border-radius: 999px; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.02em;
+  color: #fff; background: linear-gradient(135deg, #b14fff, #7d1fc9); white-space: nowrap;
+}
+.confirmed-badge .confirmed-dot { background: #fff; box-shadow: none; width: 7px; height: 7px; }
+.im-confirmed {
+  display: flex; align-items: center; gap: 7px; margin-top: 8px; font-size: 0.8rem; font-weight: 700;
+  color: #e9d4ff; padding: 6px 10px; border-radius: 9px; background: rgba(177,79,255,0.16); border: 1px solid rgba(177,79,255,0.4);
+}
+
+/* ====================== ⭐ Οι παραλίες μου (follow beaches) ====================== */
+.follow-star {
+  display: inline-flex; align-items: center; gap: 7px; min-height: 42px; padding: 0 14px;
+  border-radius: 0; border: 1px solid #cfe4e8; background: #eff8f9; color: var(--sea-dark);
+  font-weight: 800;
+}
+.follow-star.on { background: #fff6da; border-color: #f0d27a; color: #8a6a00; }
+.follow-star:hover { background: #e6f3f5; }
+.follow-star.on:hover { background: #fdefc4; }
+
+.my-beaches {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin: 0 0 16px; padding: 12px 16px; border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255,246,218,0.7), var(--panel));
+  border: 1px solid #f0e0b0; box-shadow: var(--shadow);
+}
+.my-beaches-title { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 0.86rem; color: #8a6a00; flex: none; }
+.my-beaches-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.my-beach-chip {
+  display: inline-flex; align-items: center; gap: 7px; padding: 6px 8px 6px 11px; border-radius: 999px;
+  background: #fff; border: 1px solid; border-left-width: 4px; cursor: pointer; color: var(--ink);
+  font-size: 0.84rem; font-weight: 700;
+}
+.my-beach-chip:hover { background: #f4f8f9; }
+.my-beach-name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.my-beach-risk { font-family: var(--font-head); font-weight: 900; color: #fff; padding: 1px 8px; border-radius: 999px; font-size: 0.8rem; }
+.my-beach-x { display: inline-flex; color: var(--muted); cursor: pointer; }
+.my-beach-x:hover { color: var(--red); }

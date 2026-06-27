@@ -32,6 +32,7 @@ import {
   Search,
   ShieldCheck,
   Siren,
+  Star,
   Target,
   TrendingUp,
   Upload,
@@ -239,6 +240,22 @@ function App() {
   const [userPosition, setUserPosition] = useState(null);
   const [areaQuery, setAreaQuery] = useState("");
   const [areaSearchNotice, setAreaSearchNotice] = useState("");
+  const [follows, setFollows] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("sg-follows") || "[]");
+    } catch {
+      return [];
+    }
+  });
+  const followNotified = useRef(false);
+  const toggleFollow = (id) =>
+    setFollows((f) => {
+      const next = f.includes(id) ? f.filter((x) => x !== id) : [...f, id];
+      try {
+        localStorage.setItem("sg-follows", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
 
   // ---- Πραγματικά δεδομένα (Open-Meteo Marine + GBIF) ----
   const [rawByZone, setRawByZone] = useState({}); // id -> { marine, occ }
@@ -335,7 +352,9 @@ function App() {
         localKg,
         bites,
       });
-      return { ...zone, ...computed, live: true };
+      // 🟣 «Επιβεβαιωμένη παρουσία»: υπάρχουν πραγματικές καταγραφές GBIF στην 3ετία
+      const confirmed = (computed.occRecent || 0) > 0;
+      return { ...zone, ...computed, confirmed, live: true };
     });
   }, [rawByZone, sightings, catches]);
 
@@ -346,6 +365,28 @@ function App() {
   );
 
   const selectedZone = displayZones.find((zone) => zone.id === selectedZoneId) || displayZones[0];
+  const followedZones = liveZones.filter((z) => follows.includes(z.id));
+
+  // Ειδοποίηση: αν μια ακολουθούμενη παραλία είναι σε υψηλό κίνδυνο/επιβεβαιωμένη → notification (μία φορά/session)
+  useEffect(() => {
+    if (liveStatus !== "ready" || followNotified.current) return;
+    const risky = followedZones.filter((z) => z.risk >= 66 || z.confirmed);
+    if (!risky.length) return;
+    followNotified.current = true;
+    if ("Notification" in window && Notification.permission === "granted") {
+      try {
+        const names = risky.map((z) => z.area).slice(0, 4).join(", ");
+        new Notification("EV SEA GUARD AI", {
+          body:
+            lang === "en"
+              ? `⚠️ High pufferfish risk at your beaches: ${names}`
+              : `⚠️ Υψηλός κίνδυνος λαγοκέφαλου στις παραλίες σου: ${names}`,
+          icon: "/icon-192.png",
+        });
+      } catch {}
+    }
+  }, [liveStatus, followedZones, lang]);
+
   // Επίπεδο κινδύνου δίγλωσσο (EN από το risk score, EL από το έτοιμο label)
   const lvl = (z) => {
     if (lang === "el") return z.level;
@@ -447,6 +488,7 @@ function App() {
         kg7d: 0,
         bites: 0,
         ...computed,
+        confirmed: (computed.occRecent || 0) > 0,
         live: true,
       };
       setSearchResult(result);
@@ -651,6 +693,17 @@ function App() {
           onLocate={locateUser}
           onReport={() => setActivePanel("report")}
           onSafety={() => setActivePanel("home")}
+          follows={follows}
+          onToggleFollow={toggleFollow}
+        />
+
+        <MyBeaches
+          zones={followedZones}
+          onSelect={(id) => {
+            setSearchResult(null);
+            setSelectedZoneId(id);
+          }}
+          onRemove={toggleFollow}
         />
 
         <SeaGuard3D
@@ -717,6 +770,15 @@ function App() {
                   </Popup>
                 </CircleMarker>
               ))}
+              {displayZones.filter((z) => z.confirmed).map((zone) => (
+                <CircleMarker
+                  key={`conf-${zone.id}`}
+                  center={zone.coords}
+                  radius={14 + zone.risk / 8}
+                  pathOptions={{ color: "#b14fff", fill: false, weight: 2.5, dashArray: "4 3" }}
+                  interactive={false}
+                />
+              ))}
               {displayZones.map((zone) => (
                 <CircleMarker
                   key={zone.id}
@@ -771,6 +833,13 @@ function App() {
                 {lvl(selectedZone)}
               </span>
             </div>
+            {selectedZone.confirmed && (
+              <div className="confirmed-flag">
+                <span className="confirmed-dot" aria-hidden="true" />
+                {t("Επιβεβαιωμένη παρουσία λαγοκέφαλου", "Confirmed pufferfish presence")}
+                <b>{selectedZone.occRecent}</b>
+              </div>
+            )}
             <div className="risk-score">
               <span>{selectedZone.risk}</span>
               <small>/100</small>
@@ -794,10 +863,9 @@ function App() {
                 <Camera size={18} aria-hidden="true" />
                 {t("Κάνε αναφορά", "Report")}
               </button>
-              <button type="button" className="secondary-action" onClick={() => setActivePanel("home")}>
-                <ShieldCheck size={18} aria-hidden="true" />
-                {t("Οδηγίες", "Safety")}
-              </button>
+              {selectedZone.id !== "__search" && (
+                <FollowStar active={follows.includes(selectedZone.id)} onClick={() => toggleFollow(selectedZone.id)} />
+              )}
             </div>
           </aside>
         </div>
@@ -1113,6 +1181,77 @@ function FlyToZone({ zone }) {
   return null;
 }
 
+function FollowStar({ active, onClick }) {
+  const { t } = useLang();
+  return (
+    <button
+      type="button"
+      className={`follow-star ${active ? "on" : ""}`}
+      onClick={onClick}
+      aria-pressed={active}
+      aria-label={active ? t("Κατάργηση από τις παραλίες μου", "Remove from my beaches") : t("Ακολούθησε αυτή την παραλία", "Follow this beach")}
+    >
+      <Star size={16} fill={active ? "currentColor" : "none"} aria-hidden="true" />
+      <span>{active ? t("Ακολουθείς", "Following") : t("Ακολούθησε", "Follow")}</span>
+    </button>
+  );
+}
+
+function MyBeaches({ zones, onSelect, onRemove }) {
+  const { t, lang } = useLang();
+  if (!zones.length) return null;
+  const lvl = (z) =>
+    lang === "en"
+      ? z.risk >= 82 ? "Critical" : z.risk >= 66 ? "High" : z.risk >= 48 ? "Moderate" : "Low"
+      : z.level;
+  return (
+    <section className="my-beaches" aria-label={t("Οι παραλίες μου", "My beaches")}>
+      <span className="my-beaches-title"><Star size={15} fill="currentColor" aria-hidden="true" /> {t("Οι παραλίες μου", "My beaches")}</span>
+      <div className="my-beaches-row">
+        {zones.map((z) => (
+          <div
+            key={z.id}
+            className="my-beach-chip"
+            role="button"
+            tabIndex={0}
+            style={{ borderColor: z.color }}
+            onClick={() => onSelect(z.id)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSelect(z.id);
+              }
+            }}
+            title={`${z.area} · ${lvl(z)}`}
+          >
+            {z.confirmed && <span className="confirmed-dot" aria-hidden="true" />}
+            <span className="my-beach-name">{z.area}</span>
+            <span className="my-beach-risk" style={{ background: z.color }}>{z.risk}</span>
+            <span
+              className="my-beach-x"
+              role="button"
+              tabIndex={0}
+              aria-label={t("Αφαίρεση", "Remove")}
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove(z.id);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.stopPropagation();
+                  onRemove(z.id);
+                }
+              }}
+            >
+              <XCircle size={15} aria-hidden="true" />
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function LiveDataBar({ status, error, lastUpdated, selectedZone, pointsCount, onRefresh }) {
   const { lang, t } = useLang();
   const time = lastUpdated
@@ -1359,7 +1498,9 @@ function AreaSearchPanel({
   onQuickSelect,
   onLocate,
   onReport,
-  onSafety
+  onSafety,
+  follows,
+  onToggleFollow
 }) {
   const { t, lang } = useLang();
   const peakForecast = Math.max(...forecast.map((item) => item.score));
@@ -1422,7 +1563,14 @@ function AreaSearchPanel({
         </div>
         <div className="result-details">
           <p className="eyebrow">{t("Αποτέλεσμα περιοχής", "Area result")}</p>
-          <h3>{selectedZone.area}</h3>
+          <h3>
+            {selectedZone.area}
+            {selectedZone.confirmed && (
+              <span className="confirmed-badge" title={t("Επιβεβαιωμένη παρουσία λαγοκέφαλου", "Confirmed pufferfish presence")}>
+                <span className="confirmed-dot" aria-hidden="true" /> {t("Επιβεβαιωμένη παρουσία", "Confirmed presence")}
+              </span>
+            )}
+          </h3>
           <dl>
             <div>
               <dt>{t("Επίπεδο", "Level")}</dt>
@@ -1444,10 +1592,9 @@ function AreaSearchPanel({
             <Camera size={18} aria-hidden="true" />
             {t("Κάνε αναφορά", "Report")}
           </button>
-          <button type="button" className="secondary-action" onClick={onSafety}>
-            <ShieldCheck size={18} aria-hidden="true" />
-            {t("Οδηγίες", "Safety")}
-          </button>
+          {selectedZone.id !== "__search" && onToggleFollow && (
+            <FollowStar active={(follows || []).includes(selectedZone.id)} onClick={() => onToggleFollow(selectedZone.id)} />
+          )}
         </div>
       </div>
     </section>

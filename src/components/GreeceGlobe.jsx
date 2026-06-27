@@ -288,6 +288,7 @@ export default function GreeceGlobe({ zones = [], selectedZone, onSelectZone, re
                   }}
                 >
                   {sel && <circle r={rr + 5} fill="none" stroke={z.rn.color} strokeWidth="1.4" className="globe-ping" />}
+                  {z.confirmed && <circle r={rr + 2.5} fill="none" stroke="#b14fff" strokeWidth="2.2" strokeDasharray="3 2" />}
                   <circle r={rr} fill={z.rn.color} stroke="rgba(255,255,255,0.9)" strokeWidth={sel || hov ? 2.2 : 1.4} />
                   <text textAnchor="middle" dy={3.4 * Math.min(1.5, r)} fontSize={9 * Math.min(1.5, r)} fontWeight="800" fill={z.rn.on}>
                     {z.risk}
@@ -321,6 +322,11 @@ export default function GreeceGlobe({ zones = [], selectedZone, onSelectZone, re
                 <span className="im-chip" style={{ background: cardZone.rn.color }}>{rl(cardZone.rn)}</span>
                 <strong>{cardZone.risk}/100</strong>
               </div>
+              {cardZone.confirmed && (
+                <div className="im-confirmed">
+                  <span className="confirmed-dot" aria-hidden="true" /> {t("Επιβεβαιωμένη παρουσία", "Confirmed presence")} · {cardZone.occRecent}
+                </div>
+              )}
               <dl className="im-card-facts">
                 <div>
                   <dt><Waves size={13} /> {t("Θερμοκρασία", "Temperature")}</dt>
@@ -340,6 +346,7 @@ export default function GreeceGlobe({ zones = [], selectedZone, onSelectZone, re
             <div className="im-legend-row"><span className="im-dot" style={{ background: "#E03A4E" }} /> {t("Κρίσιμος / Υψηλός", "Critical / High")}</div>
             <div className="im-legend-row"><span className="im-dot" style={{ background: "#F2C744" }} /> {t("Μέτριος", "Moderate")}</div>
             <div className="im-legend-row"><span className="im-dot" style={{ background: "#36C5A8" }} /> {t("Χαμηλός", "Low")}</div>
+            <div className="im-legend-row"><span className="im-dot" style={{ background: "#b14fff" }} /> {t("Επιβεβαιωμένη παρουσία", "Confirmed presence")}</div>
             <div className="im-legend-row"><span className="im-flow-key" /> {t("Πορεία εξάπλωσης", "Spread route")}</div>
             <div className="im-legend-row"><span className="im-dot im-dot-sm" style={{ background: "#ff6fb0" }} /> {t("Καταγραφές GBIF", "GBIF records")}</div>
           </div>
