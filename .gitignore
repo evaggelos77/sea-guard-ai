@@ -1,7 +1,0 @@
-node_modules/
-dist/
-dev-dist/
-*.log
-_*.cjs
-tunnel.*
-.DS_Store
