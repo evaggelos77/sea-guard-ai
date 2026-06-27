@@ -2323,3 +2323,10 @@ html { font-size: calc(100% * var(--ui-scale)); }
 }
 :root[data-contrast="on"] .ai-demo-tag,
 :root[data-contrast="on"] .model-planned { color:#ffd000 !important; background:#000 !important; border-color:#ffd000 !important; }
+
+/* Δορυφόροι overlay πάνω από τον Leaflet χάρτη */
+.risk-map-wrap { position: relative; }
+.map-sat-overlay {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 500; overflow: visible;
+}

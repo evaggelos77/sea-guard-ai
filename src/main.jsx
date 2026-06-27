@@ -880,6 +880,7 @@ function App() {
               onPlayToggle={() => setPlaying((p) => !p)}
             />
 
+            <div className="risk-map-wrap">
             <MapContainer center={[38.1, 24.1]} zoom={6} scrollWheelZoom={false} className="risk-map">
               <TileLayer
                 attribution="&copy; OpenStreetMap contributors"
@@ -951,6 +952,8 @@ function App() {
                 </CircleMarker>
               )}
             </MapContainer>
+            <MapSatelliteOverlay />
+            </div>
           </section>
 
           <aside className="zone-panel" aria-label={t("Κάρτα περιοχής", "Area card")}>
@@ -1800,6 +1803,88 @@ function IntelligenceStrip({ forecast, selectedZone }) {
         <strong>{lang === "en" && forecast.recommendationEn ? forecast.recommendationEn : forecast.recommendation}</strong>
       </article>
     </section>
+  );
+}
+
+// Δορυφόροι ως overlay πάνω από τον Leaflet χάρτη (pointer-events:none → ο χάρτης
+// μένει διαδραστικός). Ίδια αισθητική με την υδρόγειο: 3 σε τροχιά + 1 πάνω από τη
+// θάλασσα με δέσμη σάρωσης. Σέβεται prefers-reduced-motion.
+function MapSatGlyph({ x, y, sc, op, tilt, color }) {
+  return (
+    <g transform={`translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${sc.toFixed(3)}) rotate(${tilt.toFixed(1)})`} opacity={op.toFixed(2)} style={{ color }}>
+      <circle r="9" className="gg-sat-glow" />
+      <line x1="-11" y1="0" x2="11" y2="0" className="gg-sat-axis" />
+      <rect x="-12" y="-4" width="7" height="8" rx="1" className="gg-sat-panel" />
+      <rect x="5" y="-4" width="7" height="8" rx="1" className="gg-sat-panel" />
+      <rect x="-3.6" y="-3.6" width="7.2" height="7.2" rx="1.6" className="gg-sat-body" />
+      <circle cx="0" cy="-6" r="1.2" className="gg-sat-dish" />
+    </g>
+  );
+}
+
+function MapSatelliteOverlay() {
+  const [tSec, setTSec] = useState(0);
+  useEffect(() => {
+    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    let raf = 0;
+    const loop = (t) => {
+      setTSec(t / 1000);
+      raf = window.requestAnimationFrame(loop);
+    };
+    const apply = () => {
+      window.cancelAnimationFrame(raf);
+      if (!mq?.matches) raf = window.requestAnimationFrame(loop);
+    };
+    apply();
+    mq?.addEventListener?.("change", apply);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      mq?.removeEventListener?.("change", apply);
+    };
+  }, []);
+
+  const W = 600;
+  const H = 400;
+  const orbit = { cx: 300, cy: 116, rx: 232, ry: 66 };
+  const sats = [
+    { color: "#79efff", phase: 0.0 },
+    { color: "#ffd36a", phase: 0.4 },
+    { color: "#b8ffe8", phase: 0.72 },
+  ];
+  const sea = { cx: 432, cy: 196, rx: 58, ry: 19, period: 28 };
+  const sa = (tSec / sea.period) * Math.PI * 2;
+  const sx = sea.cx + sea.rx * Math.cos(sa);
+  const sy = sea.cy + sea.ry * Math.sin(sa);
+  const sDepth = (Math.sin(sa) + 1) / 2;
+  const sSc = 0.8 + sDepth * 0.5;
+  const beamOp = 0.1 + 0.07 * (Math.sin(tSec * 1.3) + 1) / 2;
+
+  return (
+    <svg className="map-sat-overlay" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="map-beam" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#7fe9ff" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#7fe9ff" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <ellipse cx={orbit.cx} cy={orbit.cy} rx={orbit.rx} ry={orbit.ry} className="gg-sat-orbit" />
+      {sats.map((s, i) => {
+        const a = (tSec / 38 + s.phase) * Math.PI * 2;
+        const x = orbit.cx + orbit.rx * Math.cos(a);
+        const y = orbit.cy + orbit.ry * Math.sin(a);
+        const depth = (Math.sin(a) + 1) / 2;
+        return <MapSatGlyph key={i} x={x} y={y} sc={0.75 + depth * 0.5} op={0.4 + depth * 0.55} tilt={Math.cos(a) * 16} color={s.color} />;
+      })}
+      <g style={{ color: "#7fe9ff" }}>
+        <path
+          d={`M ${(sx - 2).toFixed(2)} ${(sy + 3).toFixed(2)} L ${(sx + 2).toFixed(2)} ${(sy + 3).toFixed(2)} L ${(sx + 12).toFixed(2)} ${(sy + 44).toFixed(2)} L ${(sx - 12).toFixed(2)} ${(sy + 44).toFixed(2)} Z`}
+          fill="url(#map-beam)"
+          opacity={beamOp.toFixed(2)}
+        />
+        <ellipse cx={sx.toFixed(2)} cy={(sy + 44).toFixed(2)} rx="11" ry="3" fill="#7fe9ff" opacity={(beamOp * 1.4).toFixed(2)} className="gg-sat-scanpad" />
+        <MapSatGlyph x={sx} y={sy} sc={sSc} op={0.95} tilt={0} color="#7fe9ff" />
+      </g>
+    </svg>
   );
 }
 
