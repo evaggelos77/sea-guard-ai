@@ -821,6 +821,7 @@ function App() {
               authorityAction={authorityAction}
               exportCsv={exportCsv}
               exportPdf={exportPdf}
+              onOpenMonitor={() => setActivePanel("monitor")}
             />
           )}
           {activePanel === "admin" && (
@@ -848,6 +849,15 @@ function App() {
       <ScrollDots />
       <LocationAlert zones={displayZones} realPoints={realPoints} />
       <SosButton />
+      {activePanel === "monitor" && (
+        <AuthorityMonitor
+          zones={displayZones}
+          realPoints={realPoints}
+          sightings={sightings}
+          onExit={() => setActivePanel("authority")}
+          onRefresh={loadLiveData}
+        />
+      )}
     </div>
   );
 }
@@ -2364,7 +2374,169 @@ function FishermanPanel({ catches, onSubmit }) {
   );
 }
 
-function AuthorityPanel({ sightings, catches, selectedZone, forecast, authorityAction, exportCsv, exportPdf }) {
+const MONITOR_REGIONS = [
+  "Δωδεκάνησα", "Κυκλάδες", "Κρήτη", "Β. Αιγαίο", "Σποράδες",
+  "Ιόνιο", "Χαλκιδική", "Θράκη", "Εύβοια", "Αττική", "Πελοπόννησος",
+];
+
+function monitorLevel(risk, lang) {
+  if (risk >= 82) return lang === "en" ? "CRITICAL" : "ΚΡΙΣΙΜΟΣ";
+  if (risk >= 66) return lang === "en" ? "HIGH" : "ΥΨΗΛΟΣ";
+  if (risk >= 48) return lang === "en" ? "MODERATE" : "ΜΕΤΡΙΟΣ";
+  if (risk >= 30) return lang === "en" ? "LOW-MOD" : "ΧΑΜΗΛΟΣ-ΜΕΤΡ.";
+  return lang === "en" ? "LOW" : "ΧΑΜΗΛΟΣ";
+}
+
+// Ειδική εγκατάσταση για δημόσιες υπηρεσίες: full-screen κέντρο επιχειρήσεων,
+// στοχευμένη ανίχνευση λαγοκέφαλου στην περιοχή ευθύνης του φορέα.
+function AuthorityMonitor({ zones, realPoints, sightings, onExit, onRefresh }) {
+  const { lang, t } = useLang();
+  const [region, setRegion] = useState(() => {
+    try {
+      return localStorage.getItem("sg-monitor-region") || "Δωδεκάνησα";
+    } catch {
+      return "Δωδεκάνησα";
+    }
+  });
+  const [now, setNow] = useState(() => new Date());
+  const rootRef = useRef(null);
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem("sg-monitor-region", region);
+    } catch {}
+  }, [region]);
+  // αυτόματη ανανέωση δεδομένων κάθε 10 λεπτά
+  useEffect(() => {
+    if (!onRefresh) return undefined;
+    const id = setInterval(() => onRefresh(), 600000);
+    return () => clearInterval(id);
+  }, [onRefresh]);
+
+  const regionZones = useMemo(
+    () => zones.filter((z) => z.region === region).sort((a, b) => b.risk - a.risk),
+    [zones, region]
+  );
+  const top = regionZones[0];
+  const highCount = regionZones.filter((z) => z.risk >= 66).length;
+  const totalRecords = regionZones.reduce((s, z) => s + (z.occRecent || 0), 0);
+  const regionReports = sightings.filter((s) =>
+    regionZones.some((z) => (s.area || "").includes(z.area.split(/[ /]/)[0]))
+  );
+  const statusColor = top ? top.color : "#5fb37a";
+
+  const toggleFs = () => {
+    const el = rootRef.current;
+    if (!el) return;
+    if (!document.fullscreenElement) el.requestFullscreen?.();
+    else document.exitFullscreen?.();
+  };
+  const clock = now.toLocaleTimeString(lang === "en" ? "en-GB" : "el-GR");
+  const day = now.toLocaleDateString(lang === "en" ? "en-GB" : "el-GR", { day: "2-digit", month: "long", year: "numeric" });
+
+  return (
+    <div className="ops-monitor" ref={rootRef}>
+      <header className="ops-head">
+        <div className="ops-brand">
+          <Radar size={22} aria-hidden="true" />
+          <div>
+            <strong>EV SEA GUARD AI</strong>
+            <span>{t("ΚΕΝΤΡΟ ΕΠΙΧΕΙΡΗΣΕΩΝ · στοχευμένη ανίχνευση", "OPERATIONS CENTER · targeted detection")}</span>
+          </div>
+        </div>
+        <label className="ops-region">
+          <span>{t("Περιοχή ευθύνης", "Area of responsibility")}</span>
+          <select value={region} onChange={(e) => setRegion(e.target.value)}>
+            {MONITOR_REGIONS.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+        </label>
+        <div className="ops-clock">
+          <strong>{clock}</strong>
+          <span>{day} · <i className="ops-live">{t("ΖΩΝΤΑΝΑ", "LIVE")}</i></span>
+        </div>
+        <div className="ops-head-btns">
+          <button type="button" onClick={toggleFs} aria-label={t("Πλήρης οθόνη", "Fullscreen")}><Layers size={18} /></button>
+          <button type="button" onClick={onExit} aria-label={t("Έξοδος", "Exit")}><XCircle size={20} /></button>
+        </div>
+      </header>
+
+      <div className="ops-body">
+        <section className="ops-status" style={{ borderColor: statusColor }}>
+          <p className="ops-status-eyebrow">{t("ΚΑΤΑΣΤΑΣΗ ΠΕΡΙΟΧΗΣ", "AREA STATUS")} — {region}</p>
+          {top ? (
+            <>
+              <div className="ops-status-main">
+                <span className="ops-status-level" style={{ color: statusColor }}>{monitorLevel(top.risk, lang)}</span>
+                <span className="ops-status-score">{top.risk}<small>/100</small></span>
+              </div>
+              <p className="ops-status-zone">{t("Υψηλότερος κίνδυνος", "Highest risk")}: <strong>{top.area}</strong></p>
+              <div className="ops-status-kpis">
+                <div><b>{highCount}</b><span>{t("ζώνες υψηλού κινδύνου", "high-risk zones")}</span></div>
+                <div><b>{totalRecords}</b><span>{t("καταγραφές GBIF (3ετία)", "GBIF records (3y)")}</span></div>
+                <div><b>{regionReports.length}</b><span>{t("αναφορές πολιτών", "citizen reports")}</span></div>
+                <div><b>{regionZones.length}</b><span>{t("ζώνες παρακολούθησης", "monitored zones")}</span></div>
+              </div>
+            </>
+          ) : (
+            <p className="ops-status-zone">{t("Φόρτωση δεδομένων περιοχής…", "Loading area data…")}</p>
+          )}
+        </section>
+
+        <section className="ops-zones">
+          <h3>{t("Ζώνες περιοχής", "Area zones")}</h3>
+          <div className="ops-zone-grid">
+            {regionZones.map((z) => (
+              <div key={z.id} className="ops-zone-card" style={{ borderColor: z.color }}>
+                <div className="ops-zone-top">
+                  <span className="ops-zone-name">{z.area}</span>
+                  <span className="ops-zone-risk" style={{ background: z.color }}>{z.risk}</span>
+                </div>
+                <div className="ops-zone-facts">
+                  <span>{z.sst != null ? `${z.sst.toFixed(1)}°C` : "—"}</span>
+                  <span>{monitorLevel(z.risk, lang)}</span>
+                  <span>{z.occRecent || 0} {t("καταγρ.", "rec.")}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <aside className="ops-alerts">
+          <h3><Siren size={18} aria-hidden="true" /> {t("Στοχευμένη ανίχνευση", "Targeted detection")}</h3>
+          {regionZones.filter((z) => z.risk >= 66).length === 0 && (
+            <p className="ops-alert-none">{t("Καμία ζώνη υψηλού κινδύνου αυτή τη στιγμή.", "No high-risk zone at this time.")}</p>
+          )}
+          {regionZones
+            .filter((z) => z.risk >= 66)
+            .map((z) => (
+              <div key={z.id} className="ops-alert-row" style={{ borderColor: z.color }}>
+                <AlertTriangle size={16} style={{ color: z.color }} aria-hidden="true" />
+                <div>
+                  <strong>{z.area}</strong>
+                  <span>{monitorLevel(z.risk, lang)} · {z.risk}/100 · {z.occRecent || 0} {t("καταγραφές", "records")}</span>
+                </div>
+              </div>
+            ))}
+          <div className="ops-foot-sources">
+            {t("Πηγές", "Sources")}: Open-Meteo Marine · GBIF · {t("ανανέωση κάθε 10′", "refresh every 10′")}
+          </div>
+        </aside>
+      </div>
+      <footer className="ops-footer">
+        <span>{t("Ενημερωτικό εργαλείο — όχι επίσημη ειδοποίηση. Έκτακτη ανάγκη: 112 · Λιμενικό 108.", "Informational tool — not an official alert. Emergency: 112 · Coast Guard 108.")}</span>
+        <span>EV LABS AI · evlabsai.gr</span>
+      </footer>
+    </div>
+  );
+}
+
+function AuthorityPanel({ sightings, catches, selectedZone, forecast, authorityAction, exportCsv, exportPdf, onOpenMonitor }) {
   const { t } = useLang();
   return (
     <section className="panel-grid">
@@ -2375,6 +2547,10 @@ function AuthorityPanel({ sightings, catches, selectedZone, forecast, authorityA
             <h2>{t(`Περιοχή ελέγχου: ${selectedZone.area}`, `Monitored area: ${selectedZone.area}`)}</h2>
           </div>
           <div className="export-actions">
+            <button type="button" className="primary-action" onClick={onOpenMonitor}>
+              <Radar size={18} aria-hidden="true" />
+              {t("Κέντρο Επιχειρήσεων", "Operations Monitor")}
+            </button>
             <button type="button" className="secondary-action" onClick={exportPdf}>
               <Download size={18} aria-hidden="true" />
               Export PDF
@@ -2385,6 +2561,12 @@ function AuthorityPanel({ sightings, catches, selectedZone, forecast, authorityA
             </button>
           </div>
         </div>
+        <p className="authority-monitor-hint">
+          {t(
+            "Ειδική εγκατάσταση για δημόσιες υπηρεσίες: άνοιξε σε μόνιτορ/τηλεόραση πλήρους οθόνης για ζωντανή, στοχευμένη ανίχνευση λαγοκέφαλου στην περιοχή ευθύνης σου.",
+            "Public-service installation: open on a full-screen monitor/TV for live, targeted pufferfish detection across your area of responsibility."
+          )}
+        </p>
         <div className="authority-grid">
           <Metric icon={Bell} label={t("Σύνολο αναφορών", "Total reports")} value={sightings.length} />
           <Metric icon={BadgeCheck} label={t("Επιβεβαιωμένες", "Confirmed")} value={sightings.filter((item) => item.status === "verified").length} />
