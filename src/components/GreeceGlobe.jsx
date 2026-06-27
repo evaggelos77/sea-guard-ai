@@ -214,6 +214,10 @@ export default function GreeceGlobe({ zones = [], selectedZone, onSelectZone, re
               <marker id="gg-arrow" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
                 <path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" />
               </marker>
+              <linearGradient id="gg-beam" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#7fe9ff" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#7fe9ff" stopOpacity="0" />
+              </linearGradient>
             </defs>
 
             {/* ατμόσφαιρα + σφαίρα ωκεανού */}
@@ -479,47 +483,82 @@ const SATELLITES = [
   { color: "#ffd36a", phase: 0.38 },
   { color: "#b8ffe8", phase: 0.71 },
 ];
+// 4ος δορυφόρος: αιωρείται ΠΑΝΩ ΑΠΟ ΤΟ ΑΙΓΑΙΟ (ανοιχτή θάλασσα, δεξιά-κέντρο) με
+// διακριτική δέσμη σάρωσης προς το νερό.
+const SEA_ORBIT = { cx: 352, cy: 198, rx: 56, ry: 18, period: 27 };
+
+// Σχήμα δορυφόρου (σώμα + ηλιακά panels + πιάτο)
+function SatGlyph() {
+  return (
+    <>
+      <circle r="9" className="gg-sat-glow" />
+      <line x1="-11" y1="0" x2="11" y2="0" className="gg-sat-axis" />
+      <rect x="-12" y="-4" width="7" height="8" rx="1" className="gg-sat-panel" />
+      <rect x="5" y="-4" width="7" height="8" rx="1" className="gg-sat-panel" />
+      <rect x="-3.6" y="-3.6" width="7.2" height="7.2" rx="1.6" className="gg-sat-body" />
+      <circle cx="0" cy="-6" r="1.2" className="gg-sat-dish" />
+    </>
+  );
+}
 
 function OrbitingSatellites() {
-  const [phase, setPhase] = useState(0);
+  const [tSec, setTSec] = useState(0);
   useEffect(() => {
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return undefined;
     let raf = 0;
     const loop = (t) => {
-      setPhase((t / 34000) % 1); // ~34s ανά τροχιά — ήρεμο
+      setTSec(t / 1000); // συνεχής χρόνος — επιτρέπει διαφορετικές περιόδους χωρίς «πήδημα»
       raf = window.requestAnimationFrame(loop);
     };
     raf = window.requestAnimationFrame(loop);
     return () => window.cancelAnimationFrame(raf);
   }, []);
 
+  // δορυφόρος Αιγαίου
+  const sa = (tSec / SEA_ORBIT.period) * Math.PI * 2;
+  const sx = SEA_ORBIT.cx + SEA_ORBIT.rx * Math.cos(sa);
+  const sy = SEA_ORBIT.cy + SEA_ORBIT.ry * Math.sin(sa);
+  const sDepth = (Math.sin(sa) + 1) / 2;
+  const sSc = 0.72 + sDepth * 0.5;
+  const beamOp = 0.1 + 0.07 * (Math.sin(tSec * 1.3) + 1) / 2; // απαλό «ανάσασμα» δέσμης
+
   return (
     <g className="gg-satellites" aria-hidden="true">
       <ellipse cx={SAT_ORBIT.cx} cy={SAT_ORBIT.cy} rx={SAT_ORBIT.rx} ry={SAT_ORBIT.ry} className="gg-sat-orbit" />
+      <ellipse cx={SEA_ORBIT.cx} cy={SEA_ORBIT.cy} rx={SEA_ORBIT.rx} ry={SEA_ORBIT.ry} className="gg-sat-orbit sea" />
+
       {SATELLITES.map((s, i) => {
-        const a = (phase + s.phase) * Math.PI * 2;
+        const a = (tSec / 34 + s.phase) * Math.PI * 2;
         const x = SAT_ORBIT.cx + SAT_ORBIT.rx * Math.cos(a);
         const y = SAT_ORBIT.cy + SAT_ORBIT.ry * Math.sin(a);
-        const depth = (Math.sin(a) + 1) / 2; // 0 = πίσω (μικρό/αχνό), 1 = μπροστά
+        const depth = (Math.sin(a) + 1) / 2;
         const sc = 0.7 + depth * 0.55;
         const op = 0.35 + depth * 0.6;
         const tilt = Math.cos(a) * 16;
         return (
           <g
             key={i}
-            transform={`translate(${x} ${y}) scale(${sc.toFixed(3)}) rotate(${tilt.toFixed(1)})`}
+            transform={`translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${sc.toFixed(3)}) rotate(${tilt.toFixed(1)})`}
             opacity={op.toFixed(2)}
             style={{ color: s.color }}
           >
-            <circle r="9" className="gg-sat-glow" />
-            <line x1="-11" y1="0" x2="11" y2="0" className="gg-sat-axis" />
-            <rect x="-12" y="-4" width="7" height="8" rx="1" className="gg-sat-panel" />
-            <rect x="5" y="-4" width="7" height="8" rx="1" className="gg-sat-panel" />
-            <rect x="-3.6" y="-3.6" width="7.2" height="7.2" rx="1.6" className="gg-sat-body" />
-            <circle cx="0" cy="-6" r="1.2" className="gg-sat-dish" />
+            <SatGlyph />
           </g>
         );
       })}
+
+      {/* 4ος: πάνω από το Αιγαίο, με δέσμη σάρωσης προς τη θάλασσα */}
+      <g style={{ color: "#7fe9ff" }}>
+        <path
+          d={`M ${(sx - 2).toFixed(2)} ${(sy + 3).toFixed(2)} L ${(sx + 2).toFixed(2)} ${(sy + 3).toFixed(2)} L ${(sx + 12).toFixed(2)} ${(sy + 44).toFixed(2)} L ${(sx - 12).toFixed(2)} ${(sy + 44).toFixed(2)} Z`}
+          fill="url(#gg-beam)"
+          opacity={beamOp.toFixed(2)}
+        />
+        <ellipse cx={sx.toFixed(2)} cy={(sy + 44).toFixed(2)} rx="11" ry="3" fill="#7fe9ff" opacity={(beamOp * 1.4).toFixed(2)} className="gg-sat-scanpad" />
+        <g transform={`translate(${sx.toFixed(2)} ${sy.toFixed(2)}) scale(${sSc.toFixed(3)})`}>
+          <SatGlyph />
+        </g>
+      </g>
     </g>
   );
 }

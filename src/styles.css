@@ -2303,3 +2303,7 @@ html { font-size: calc(100% * var(--ui-scale)); }
 .gg-sat-panel { fill: currentColor; opacity: 0.5; stroke: rgba(255, 255, 255, 0.45); stroke-width: 0.4; }
 .gg-sat-body { fill: #0b3142; stroke: currentColor; stroke-width: 1.2; }
 .gg-sat-dish { fill: #ffffff; opacity: 0.9; }
+
+/* 4ος δορυφόρος πάνω από το Αιγαίο — δέσμη σάρωσης */
+.gg-sat-orbit.sea { stroke: rgba(127, 233, 255, 0.12); stroke-dasharray: 2 6; }
+.gg-sat-scanpad { filter: blur(1.5px); }
