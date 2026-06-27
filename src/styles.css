@@ -2291,3 +2291,15 @@ html { font-size: calc(100% * var(--ui-scale)); }
 :root[data-contrast="on"] .about-disclaimer strong,
 :root[data-contrast="on"] .about-disclaimer p,
 :root[data-contrast="on"] .about-disclaimer svg { color:#ff8a8a !important; }
+
+/* Δορυφόροι σε τροχιά πάνω από τον χάρτη Ελλάδας (GreeceGlobe) */
+.gg-satellites { pointer-events: none; }
+.gg-sat-orbit {
+  fill: none; stroke: rgba(127, 212, 255, 0.14);
+  stroke-width: 1; stroke-dasharray: 3 7;
+}
+.gg-sat-glow { fill: currentColor; opacity: 0.14; }
+.gg-sat-axis { stroke: currentColor; stroke-width: 1.4; opacity: 0.75; }
+.gg-sat-panel { fill: currentColor; opacity: 0.5; stroke: rgba(255, 255, 255, 0.45); stroke-width: 0.4; }
+.gg-sat-body { fill: #0b3142; stroke: currentColor; stroke-width: 1.2; }
+.gg-sat-dish { fill: #ffffff; opacity: 0.9; }

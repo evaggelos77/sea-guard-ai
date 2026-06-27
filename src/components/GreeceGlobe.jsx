@@ -261,6 +261,9 @@ export default function GreeceGlobe({ zones = [], selectedZone, onSelectZone, re
               </g>
             )}
 
+            {/* δορυφόροι σε τροχιά από πάνω (διακριτικά, διακοσμητικά) */}
+            <OrbitingSatellites />
+
             {/* ζώνες κινδύνου ως κόμβοι (αριθμός μέσα) */}
             {projectedZones.map((z) => {
               if (!z.p) return null;
@@ -464,6 +467,59 @@ function FlowParticles({ projection, corridors, center }) {
           return <circle key={`${rt.id}-${pi}`} cx={p[0]} cy={p[1]} r={2.6} fill={rt.color} style={{ filter: `drop-shadow(0 0 4px ${rt.color})` }} />;
         })
       )}
+    </g>
+  );
+}
+
+// Δορυφόροι σε ήρεμη ελλειπτική τροχιά «από πάνω» από τον χάρτη (διακριτικό, διακοσμητικό,
+// σαν τον hero). Σέβεται το prefers-reduced-motion (μένουν ακίνητοι).
+const SAT_ORBIT = { cx: 260, cy: 140, rx: 212, ry: 80 };
+const SATELLITES = [
+  { color: "#79efff", phase: 0.0 },
+  { color: "#ffd36a", phase: 0.38 },
+  { color: "#b8ffe8", phase: 0.71 },
+];
+
+function OrbitingSatellites() {
+  const [phase, setPhase] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return undefined;
+    let raf = 0;
+    const loop = (t) => {
+      setPhase((t / 34000) % 1); // ~34s ανά τροχιά — ήρεμο
+      raf = window.requestAnimationFrame(loop);
+    };
+    raf = window.requestAnimationFrame(loop);
+    return () => window.cancelAnimationFrame(raf);
+  }, []);
+
+  return (
+    <g className="gg-satellites" aria-hidden="true">
+      <ellipse cx={SAT_ORBIT.cx} cy={SAT_ORBIT.cy} rx={SAT_ORBIT.rx} ry={SAT_ORBIT.ry} className="gg-sat-orbit" />
+      {SATELLITES.map((s, i) => {
+        const a = (phase + s.phase) * Math.PI * 2;
+        const x = SAT_ORBIT.cx + SAT_ORBIT.rx * Math.cos(a);
+        const y = SAT_ORBIT.cy + SAT_ORBIT.ry * Math.sin(a);
+        const depth = (Math.sin(a) + 1) / 2; // 0 = πίσω (μικρό/αχνό), 1 = μπροστά
+        const sc = 0.7 + depth * 0.55;
+        const op = 0.35 + depth * 0.6;
+        const tilt = Math.cos(a) * 16;
+        return (
+          <g
+            key={i}
+            transform={`translate(${x} ${y}) scale(${sc.toFixed(3)}) rotate(${tilt.toFixed(1)})`}
+            opacity={op.toFixed(2)}
+            style={{ color: s.color }}
+          >
+            <circle r="9" className="gg-sat-glow" />
+            <line x1="-11" y1="0" x2="11" y2="0" className="gg-sat-axis" />
+            <rect x="-12" y="-4" width="7" height="8" rx="1" className="gg-sat-panel" />
+            <rect x="5" y="-4" width="7" height="8" rx="1" className="gg-sat-panel" />
+            <rect x="-3.6" y="-3.6" width="7.2" height="7.2" rx="1.6" className="gg-sat-body" />
+            <circle cx="0" cy="-6" r="1.2" className="gg-sat-dish" />
+          </g>
+        );
+      })}
     </g>
   );
 }
