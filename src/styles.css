@@ -2020,3 +2020,25 @@ td {
 .my-beach-risk { font-family: var(--font-head); font-weight: 900; color: #fff; padding: 1px 8px; border-radius: 999px; font-size: 0.8rem; }
 .my-beach-x { display: inline-flex; color: var(--muted); cursor: pointer; }
 .my-beach-x:hover { color: var(--red); }
+
+/* ====================== Χρονομηχανή εξάπλωσης (spread timeline) ====================== */
+.timeline { margin: 0 0 10px; }
+.timeline-toggle {
+  display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 999px;
+  border: 1px solid #bfdce2; background: #eff8f9; color: var(--sea-dark); font-weight: 800; font-size: 0.86rem;
+}
+.timeline-toggle.on { background: var(--sea); color: #fff; border-color: var(--sea); }
+.timeline-toggle:hover { filter: brightness(0.98); }
+.timeline-sub { font-weight: 600; font-size: 0.74rem; opacity: 0.8; }
+.timeline-controls {
+  display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 10px 14px;
+  border-radius: 12px; background: #0b3442; color: #eaf4ff; box-shadow: var(--shadow); flex-wrap: wrap;
+}
+.timeline-play {
+  display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; flex: none;
+  background: var(--aqua); color: #04231c; border: 0;
+}
+.timeline-play:hover { filter: brightness(1.08); }
+.timeline-range { flex: 1; min-width: 160px; accent-color: #7fd4ff; height: 4px; }
+.timeline-year { font-family: var(--font-head); font-weight: 900; font-size: 1.4rem; color: #fff; min-width: 56px; text-align: center; font-variant-numeric: tabular-nums; }
+.timeline-count { font-size: 0.82rem; color: #9cc0e4; font-weight: 700; }

@@ -164,6 +164,28 @@ export async function fetchOccurrencePoints(signal, pages = 3) {
   return out;
 }
 
+// Πλήρες ιστορικό καταγραφών GBIF (από fromYear έως σήμερα) — για τη «χρονομηχανή εξάπλωσης».
+export async function fetchOccurrenceHistory(signal, fromYear = 2005, pages = 8) {
+  const yNow = new Date().getFullYear();
+  const base =
+    `https://api.gbif.org/v1/occurrence/search?taxonKey=${LAGOCEPHALUS_TAXON_KEY}&hasCoordinate=true` +
+    `&decimalLatitude=34,42&decimalLongitude=19,30&year=${fromYear},${yNow}&limit=300`;
+  const out = [];
+  for (let p = 0; p < pages; p++) {
+    const res = await fetch(`${base}&offset=${p * 300}`, { signal });
+    if (!res.ok) break;
+    const j = await res.json();
+    const results = j.results || [];
+    for (const r of results) {
+      if (r.decimalLatitude != null && r.decimalLongitude != null && r.year) {
+        out.push({ lat: r.decimalLatitude, lng: r.decimalLongitude, year: r.year });
+      }
+    }
+    if (results.length < 300 || j.endOfRecords) break;
+  }
+  return out;
+}
+
 // Μετράει πραγματικές καταγραφές σε «κουτί» γύρω από συντεταγμένη (για το σήμα παρουσίας).
 export function countPointsNear(points, lat, lon, halfDeg = 0.55) {
   let n = 0;

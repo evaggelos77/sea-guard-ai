@@ -26,6 +26,9 @@ import {
   LocateFixed,
   MapPin,
   Megaphone,
+  Play,
+  Pause,
+  Share2,
   Radio,
   Radar,
   Satellite,
@@ -46,6 +49,7 @@ import {
   fetchMarine,
   fetchMarineBatch,
   fetchOccurrencePoints,
+  fetchOccurrenceHistory,
   countPointsNear,
   computeLiveZone,
   geocodeGreece,
@@ -228,6 +232,7 @@ const roles = [
 ];
 
 const areaAliases = AREA_ALIASES;
+const MIN_TIMELINE_YEAR = 2005; // πρώτες ελληνικές καταγραφές λαγοκέφαλου
 
 function App() {
   const { lang, setLang, t } = useLang();
@@ -256,6 +261,46 @@ function App() {
       } catch {}
       return next;
     });
+
+  // ---- Χρονομηχανή εξάπλωσης (GBIF ιστορικό) ----
+  const nowYear = new Date().getFullYear();
+  const [timelineActive, setTimelineActive] = useState(false);
+  const [historyPoints, setHistoryPoints] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [timelineYear, setTimelineYear] = useState(nowYear);
+  const [playing, setPlaying] = useState(false);
+  const historyLoadedRef = useRef(false);
+
+  const toggleTimeline = async () => {
+    const next = !timelineActive;
+    setTimelineActive(next);
+    if (next && !historyLoadedRef.current) {
+      historyLoadedRef.current = true;
+      setHistoryLoading(true);
+      try {
+        const h = await fetchOccurrenceHistory();
+        setHistoryPoints(h);
+        setTimelineYear(MIN_TIMELINE_YEAR);
+        setPlaying(true);
+      } catch {
+        // αν αποτύχει, χρησιμοποιούμε τα τρέχοντα σημεία
+      }
+      setHistoryLoading(false);
+    } else if (next) {
+      setTimelineYear(MIN_TIMELINE_YEAR);
+      setPlaying(true);
+    } else {
+      setPlaying(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!timelineActive || !playing) return undefined;
+    const id = setInterval(() => {
+      setTimelineYear((y) => (y >= nowYear ? MIN_TIMELINE_YEAR : y + 1));
+    }, 900);
+    return () => clearInterval(id);
+  }, [timelineActive, playing, nowYear]);
 
   // ---- Πραγματικά δεδομένα (Open-Meteo Marine + GBIF) ----
   const [rawByZone, setRawByZone] = useState({}); // id -> { marine, occ }
@@ -366,6 +411,10 @@ function App() {
 
   const selectedZone = displayZones.find((zone) => zone.id === selectedZoneId) || displayZones[0];
   const followedZones = liveZones.filter((z) => follows.includes(z.id));
+  // Σημεία χάρτη: ιστορικά (φιλτραρισμένα έως το έτος) όταν τρέχει η χρονομηχανή, αλλιώς τα τρέχοντα
+  const mapPoints = timelineActive
+    ? historyPoints.filter((p) => p.year && p.year <= timelineYear)
+    : realPoints;
 
   // Ειδοποίηση: αν μια ακολουθούμενη παραλία είναι σε υψηλό κίνδυνο/επιβεβαιωμένη → notification (μία φορά/session)
   useEffect(() => {
@@ -745,10 +794,23 @@ function App() {
             </div>
             <p className="map-source-note">
               <span className="gbif-dot" aria-hidden="true" /> {t(
-                `Γαλάζιες κουκκίδες = πραγματικές καταγραφές GBIF (${realPoints.length}). Κύκλοι = ζώνες με ζωντανό Risk Score.`,
-                `Blue dots = real GBIF records (${realPoints.length}). Circles = zones with a live Risk Score.`
+                `Γαλάζιες κουκκίδες = πραγματικές καταγραφές GBIF (${mapPoints.length}). Κύκλοι = ζώνες με ζωντανό Risk Score.`,
+                `Blue dots = real GBIF records (${mapPoints.length}). Circles = zones with a live Risk Score.`
               )}
             </p>
+
+            <SpreadTimeline
+              active={timelineActive}
+              onToggle={toggleTimeline}
+              year={timelineYear}
+              setYear={setTimelineYear}
+              minYear={MIN_TIMELINE_YEAR}
+              maxYear={nowYear}
+              count={mapPoints.length}
+              loading={historyLoading}
+              playing={playing}
+              onPlayToggle={() => setPlaying((p) => !p)}
+            />
 
             <MapContainer center={[38.1, 24.1]} zoom={6} scrollWheelZoom={false} className="risk-map">
               <TileLayer
@@ -756,7 +818,7 @@ function App() {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               <FlyToZone zone={selectedZone} />
-              {realPoints.map((pt, index) => (
+              {mapPoints.map((pt, index) => (
                 <CircleMarker
                   key={`gbif-${index}`}
                   center={[pt.lat, pt.lng]}
@@ -866,6 +928,7 @@ function App() {
               {selectedZone.id !== "__search" && (
                 <FollowStar active={follows.includes(selectedZone.id)} onClick={() => toggleFollow(selectedZone.id)} />
               )}
+              <ShareButton zone={selectedZone} />
             </div>
           </aside>
         </div>
@@ -1179,6 +1242,70 @@ function FlyToZone({ zone }) {
     if (zone?.coords) map.flyTo(zone.coords, 9, { duration: 1.1 });
   }, [zone?.id, zone?.coords?.[0], zone?.coords?.[1], map]);
   return null;
+}
+
+function SpreadTimeline({ active, onToggle, year, setYear, minYear, maxYear, count, loading, playing, onPlayToggle }) {
+  const { t } = useLang();
+  return (
+    <div className={`timeline ${active ? "on" : ""}`}>
+      <button type="button" className={`timeline-toggle ${active ? "on" : ""}`} onClick={onToggle}>
+        <Clock3 size={16} aria-hidden="true" /> {t("Χρονομηχανή εξάπλωσης", "Spread timeline")}
+        <span className="timeline-sub">{t("δες την εισβολή από το 2005", "see the invasion since 2005")}</span>
+      </button>
+      {active && (
+        <div className="timeline-controls">
+          <button
+            type="button"
+            className="timeline-play"
+            onClick={onPlayToggle}
+            aria-label={playing ? t("Παύση", "Pause") : t("Αναπαραγωγή", "Play")}
+          >
+            {playing ? <Pause size={16} /> : <Play size={16} />}
+          </button>
+          <input
+            type="range"
+            min={minYear}
+            max={maxYear}
+            value={year}
+            onChange={(e) => setYear(Number(e.target.value))}
+            className="timeline-range"
+            aria-label={t("Έτος", "Year")}
+          />
+          <span className="timeline-year">{loading ? "…" : year}</span>
+          <span className="timeline-count">{count} {t("καταγραφές", "records")}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ShareButton({ zone }) {
+  const { t, lang } = useLang();
+  const [copied, setCopied] = useState(false);
+  const share = async () => {
+    const url = "https://evaggelos77.github.io/sea-guard-ai/";
+    const text =
+      lang === "en"
+        ? `🐡 ${zone.area}: pufferfish risk ${zone.risk}/100. Check it live:`
+        : `🐡 ${zone.area}: κίνδυνος λαγοκέφαλου ${zone.risk}/100. Δες το ζωντανά:`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "EV SEA GUARD AI", text, url });
+      } catch {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${text} ${url}`);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {}
+    }
+  };
+  return (
+    <button type="button" className="secondary-action" onClick={share}>
+      <Share2 size={18} aria-hidden="true" />
+      {copied ? t("Αντιγράφηκε!", "Copied!") : t("Κοινοποίηση", "Share")}
+    </button>
+  );
 }
 
 function FollowStar({ active, onClick }) {
@@ -1595,6 +1722,7 @@ function AreaSearchPanel({
           {selectedZone.id !== "__search" && onToggleFollow && (
             <FollowStar active={(follows || []).includes(selectedZone.id)} onClick={() => onToggleFollow(selectedZone.id)} />
           )}
+          <ShareButton zone={selectedZone} />
         </div>
       </div>
     </section>
