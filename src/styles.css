@@ -2139,7 +2139,7 @@ html { font-size: calc(100% * var(--ui-scale)); }
 .verdict-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 11px; border-radius: 11px; }
 .verdict-row svg { flex: 0 0 auto; margin-top: 1px; }
 .verdict-row strong { display: block; font-size: 0.92rem; font-weight: 850; }
-.verdict-row span { display: block; font-size: 0.82rem; line-height: 1.4; opacity: 0.9; margin-top: 2px; }
+.verdict-row span { display: block; font-size: 0.82rem; line-height: 1.4; margin-top: 2px; }
 .verdict-row.ok { background: rgba(47,166,106,0.12); color: #155f3a; }
 .verdict-row.warn { background: rgba(214,138,20,0.14); color: #7a4a08; }
 .verdict-row.high { background: rgba(216,66,66,0.13); color: #8a1f1f; }
@@ -2307,3 +2307,19 @@ html { font-size: calc(100% * var(--ui-scale)); }
 /* 4ος δορυφόρος πάνω από το Αιγαίο — δέσμη σάρωσης */
 .gg-sat-orbit.sea { stroke: rgba(127, 233, 255, 0.12); stroke-dasharray: 2 6; }
 .gg-sat-scanpad { filter: blur(1.5px); }
+
+/* Τίμιες ετικέτες AI (demo / roadmap) */
+.ai-demo-tag {
+  display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px;
+  font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+  color: #8a6d1f; background: rgba(230,162,51,0.18); border: 1px solid rgba(230,162,51,0.4);
+  vertical-align: middle;
+}
+.model-note { margin: 0 0 12px; font-size: 0.82rem; line-height: 1.45; color: var(--muted); }
+.model-planned {
+  font-size: 0.66rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+  color: #1d7fa3; background: rgba(45,181,201,0.14); border: 1px solid rgba(45,181,201,0.35);
+  padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+}
+:root[data-contrast="on"] .ai-demo-tag,
+:root[data-contrast="on"] .model-planned { color:#ffd000 !important; background:#000 !important; border-color:#ffd000 !important; }

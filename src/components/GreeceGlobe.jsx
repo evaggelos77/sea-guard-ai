@@ -446,14 +446,22 @@ function FlowParticles({ projection, corridors, center }) {
 
   const [phase, setPhase] = useState(0);
   useEffect(() => {
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     let raf = 0;
     const loop = (t) => {
       setPhase((t / 4200) % 1);
       raf = window.requestAnimationFrame(loop);
     };
-    raf = window.requestAnimationFrame(loop);
-    return () => window.cancelAnimationFrame(raf);
+    const apply = () => {
+      window.cancelAnimationFrame(raf);
+      if (!mq?.matches) raf = window.requestAnimationFrame(loop);
+    };
+    apply();
+    mq?.addEventListener?.("change", apply);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      mq?.removeEventListener?.("change", apply);
+    };
   }, []);
 
   const vis = (lon, lat) => geoDistance([lon, lat], center) < Math.PI / 2 - 0.01;
@@ -504,14 +512,22 @@ function SatGlyph() {
 function OrbitingSatellites() {
   const [tSec, setTSec] = useState(0);
   useEffect(() => {
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return undefined;
+    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     let raf = 0;
     const loop = (t) => {
       setTSec(t / 1000); // συνεχής χρόνος — επιτρέπει διαφορετικές περιόδους χωρίς «πήδημα»
       raf = window.requestAnimationFrame(loop);
     };
-    raf = window.requestAnimationFrame(loop);
-    return () => window.cancelAnimationFrame(raf);
+    const apply = () => {
+      window.cancelAnimationFrame(raf);
+      if (!mq?.matches) raf = window.requestAnimationFrame(loop);
+    };
+    apply();
+    mq?.addEventListener?.("change", apply);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      mq?.removeEventListener?.("change", apply);
+    };
   }, []);
 
   // δορυφόρος Αιγαίου

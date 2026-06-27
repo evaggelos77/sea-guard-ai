@@ -460,6 +460,7 @@ function App() {
   );
 
   const selectedZone = displayZones.find((zone) => zone.id === selectedZoneId) || displayZones[0];
+  const notLive = selectedZone?.live === false; // δεν δείχνουμε εφευρεμένο σκορ όταν λείπουν δεδομένα
   const followedZones = liveZones.filter((z) => follows.includes(z.id));
   // Σημεία χάρτη: ιστορικά (φιλτραρισμένα έως το έτος) όταν τρέχει η χρονομηχανή, αλλιώς τα τρέχοντα
   const mapPoints = timelineActive
@@ -480,7 +481,7 @@ function App() {
             lang === "en"
               ? `⚠️ High pufferfish risk at your beaches: ${names}`
               : `⚠️ Υψηλός κίνδυνος λαγοκέφαλου στις παραλίες σου: ${names}`,
-          icon: "/icon-192.png",
+          icon: `${import.meta.env.BASE_URL}icon-192.png`,
         });
       } catch {}
     }
@@ -839,15 +840,15 @@ function App() {
         <IntelligenceStrip forecast={forecast} selectedZone={selectedZone} />
 
         <section className="metrics-grid" aria-label={t("Σύνοψη κινδύνου", "Risk summary")}>
-          <Metric icon={Gauge} label="Risk Score" value={`${selectedZone.risk}/100`} tone={selectedZone.risk >= 80 ? "danger" : "warn"} />
+          <Metric icon={Gauge} label={t("Δείκτης κινδύνου", "Risk Score")} value={notLive ? "—" : `${selectedZone.risk}/100`} tone={!notLive && selectedZone.risk >= 80 ? "danger" : "warn"} />
           <Metric
             icon={Waves}
             label={t("Θερμοκρασία SST", "Sea temp (SST)")}
             value={selectedZone.sst != null ? `${selectedZone.sst.toFixed(1)}°C` : "—"}
             tone={selectedZone.sst != null && selectedZone.sst >= 24 ? "danger" : "default"}
           />
-          <Metric icon={TrendingUp} label={t("Πρόβλεψη 72h", "72h forecast")} value={`${forecast[2].score}/100`} tone={forecast[2].score >= 80 ? "danger" : "warn"} />
-          <Metric icon={BrainCircuit} label={t("Κάλυψη δεδομένων", "Data coverage")} value={`${forecast.confidence}%`} />
+          <Metric icon={TrendingUp} label={t("Πρόβλεψη 72h", "72h forecast")} value={notLive ? "—" : `${forecast[2].score}/100`} tone={!notLive && forecast[2].score >= 80 ? "danger" : "warn"} />
+          <Metric icon={BrainCircuit} label={t("Κάλυψη δεδομένων", "Data coverage")} value={notLive ? "—" : `${forecast.confidence}%`} />
         </section>
 
         <div className="workspace-grid">
@@ -918,13 +919,13 @@ function App() {
                     fillOpacity: selectedZoneId === zone.id ? 0.75 : 0.48,
                     weight: selectedZoneId === zone.id ? 4 : 2
                   }}
-                  radius={10 + zone.risk / 8}
+                  radius={10 + (zone.live === false ? 0 : zone.risk) / 8}
                   eventHandlers={{ click: () => setSelectedZoneId(zone.id) }}
                 >
                   <Popup>
                     <strong>{zone.area}</strong>
                     <br />
-                    Risk Score: {zone.risk}/100 · {lvl(zone)}
+                    {t("Δείκτης κινδύνου", "Risk score")}: {zone.live === false ? "—" : `${zone.risk}/100`} · {lvl(zone)}
                     {zone.sst != null && (
                       <>
                         <br />
@@ -1346,7 +1347,7 @@ function LocationAlert({ zones, realPoints }) {
             a.level === "record"
               ? t(`⚠️ Λαγοκέφαλος έχει καταγραφεί κοντά σου (${a.area}). Μην αγγίζεις άγνωστα ψάρια.`, `⚠️ Pufferfish recorded near you (${a.area}). Don't touch unfamiliar fish.`)
               : t(`⚠️ Είσαι σε περιοχή υψηλού κινδύνου λαγοκέφαλου (${a.area}).`, `⚠️ You are in a high-risk pufferfish area (${a.area}).`),
-          icon: "/icon-192.png",
+          icon: `${import.meta.env.BASE_URL}icon-192.png`,
         });
       } catch {}
     }
@@ -1672,7 +1673,7 @@ function MyBeaches({ zones, onSelect, onRemove }) {
   if (!zones.length) return null;
   const lvl = (z) =>
     lang === "en"
-      ? z.risk >= 82 ? "Critical" : z.risk >= 66 ? "High" : z.risk >= 48 ? "Moderate" : "Low"
+      ? z.risk >= 82 ? "Critical" : z.risk >= 66 ? "High" : z.risk >= 48 ? "Moderate-high" : z.risk >= 30 ? "Moderate" : "Low"
       : z.level;
   return (
     <section className="my-beaches" aria-label={t("Οι παραλίες μου", "My beaches")}>
@@ -1731,7 +1732,7 @@ function LiveDataBar({ status, error, lastUpdated, selectedZone, pointsCount, on
     status === "loading"
       ? t("Σύνδεση με ζωντανές πηγές…", "Connecting to live sources…")
       : status === "error"
-        ? t("Αδυναμία σύνδεσης — εκτιμώμενες τιμές", "Connection failed — estimated values")
+        ? t("Αδυναμία σύνδεσης — δεν φορτώθηκαν ζωντανά δεδομένα", "Connection failed — live data not loaded")
         : t("Ζωντανά δεδομένα ενεργά", "Live data active");
   return (
     <section className={`live-bar live-bar--${status}`} aria-label={t("Κατάσταση ζωντανών δεδομένων", "Live data status")}>
@@ -1773,24 +1774,25 @@ function LiveDataBar({ status, error, lastUpdated, selectedZone, pointsCount, on
 
 function IntelligenceStrip({ forecast, selectedZone }) {
   const { lang, t } = useLang();
+  const notLive = selectedZone?.live === false;
   return (
     <section className="intelligence-strip" aria-label={t("AI επιχειρησιακή πρόβλεψη", "AI operational forecast")}>
       <article>
         <Radar size={20} aria-hidden="true" />
         <span>{t("Τρέχων κίνδυνος", "Current risk")}</span>
-        <strong>{selectedZone.risk}/100</strong>
+        <strong>{notLive ? "—" : `${selectedZone.risk}/100`}</strong>
       </article>
       {forecast.map((item) => (
         <article key={item.label}>
           <Clock3 size={20} aria-hidden="true" />
           <span>{item.label}</span>
-          <strong>{item.score}/100</strong>
+          <strong>{notLive ? "—" : `${item.score}/100`}</strong>
         </article>
       ))}
       <article>
         <BrainCircuit size={20} aria-hidden="true" />
         <span>{t("Κάλυψη δεδομένων", "Data coverage")}</span>
-        <strong>{forecast.confidence}%</strong>
+        <strong>{notLive ? "—" : `${forecast.confidence}%`}</strong>
       </article>
       <article className="decision">
         <Siren size={20} aria-hidden="true" />
@@ -1982,8 +1984,8 @@ function AreaSearchPanel({
   const { t, lang } = useLang();
   const peakForecast = Math.max(...forecast.map((item) => item.score));
   const lvl = (z) => {
+    if (!z.live) return lang === "el" ? "Δεν φορτώθηκε" : "Not loaded";
     if (lang === "el") return z.level;
-    if (!z.live) return "Loading…";
     const r = z.risk;
     return r >= 82 ? "Critical" : r >= 66 ? "High" : r >= 48 ? "Moderate-high" : r >= 30 ? "Moderate" : "Low";
   };
@@ -2017,7 +2019,7 @@ function AreaSearchPanel({
 
       <div className="quick-area-grid" aria-label={t("Γρήγορη επιλογή δημοφιλών περιοχών", "Popular areas")}>
         {zones
-          .filter((zone) => zone.popular || zone.id === selectedZone.id)
+          .filter((zone) => zone.id !== "__search" && (zone.popular || zone.id === selectedZone.id))
           .map((zone) => (
             <button
               type="button"
@@ -2035,7 +2037,7 @@ function AreaSearchPanel({
 
       <div className="search-result-card">
         <div className="result-risk" style={{ borderColor: selectedZone.color }}>
-          <span>{selectedZone.risk}</span>
+          <span>{selectedZone.live === false ? "—" : selectedZone.risk}</span>
           <small>/100</small>
         </div>
         <div className="result-details">
@@ -2708,6 +2710,7 @@ function AiSystem({ title, detail }) {
 
 function RiskEnginePanel({ selectedZone, sightings, catches, forecast }) {
   const { t, lang } = useLang();
+  const notLive = selectedZone?.live === false;
   const bd = selectedZone.breakdown;
   const breakdownRows = bd
     ? [
@@ -2738,7 +2741,9 @@ function RiskEnginePanel({ selectedZone, sightings, catches, forecast }) {
         <div className="panel-heading">
           <div>
             <p className="eyebrow">{t("Lagokefalos Risk Engine · ζωντανός υπολογισμός", "Lagokefalos Risk Engine · live calculation")}</p>
-            <h2>{t(`Risk Score ${selectedZone.risk}/100 για ${selectedZone.area}`, `Risk Score ${selectedZone.risk}/100 for ${selectedZone.area}`)}</h2>
+            <h2>{notLive
+              ? t(`${selectedZone.area} — δεν φορτώθηκε`, `${selectedZone.area} — not loaded`)
+              : t(`Δείκτης κινδύνου ${selectedZone.risk}/100 για ${selectedZone.area}`, `Risk Score ${selectedZone.risk}/100 for ${selectedZone.area}`)}</h2>
           </div>
           <Gauge size={24} aria-hidden="true" />
         </div>
@@ -2852,11 +2857,17 @@ function AiModelStackPanel() {
     <article className="info-panel wide">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">{t("AI systems", "AI systems")}</p>
-          <h3>{t("Συνεργαζόμενα μοντέλα νοημοσύνης", "Collaborating AI models")}</h3>
+          <p className="eyebrow">{t("Αρχιτεκτονική AI · χάρτης ανάπτυξης", "AI architecture · roadmap")}</p>
+          <h3>{t("Μοντέλα υπό ανάπτυξη", "Models in development")}</h3>
         </div>
         <BrainCircuit size={22} aria-hidden="true" />
       </div>
+      <p className="model-note">
+        {t(
+          "Ο ζωντανός υπολογισμός σήμερα γίνεται με τον διαφανή τύπο 45/35/20 (δες «Πηγές & Μεθοδολογία»). Τα παρακάτω είναι ο σχεδιασμός επόμενης φάσης.",
+          "Today's live calculation uses the transparent 45/35/20 formula (see “Sources & Methodology”). The below is the next-phase roadmap."
+        )}
+      </p>
       <div className="model-stack">
         {aiModels.map((model) => (
           <div className="model-row" key={model.name}>
@@ -2864,7 +2875,7 @@ function AiModelStackPanel() {
               <strong>{model.name}</strong>
               <span>{lang === "en" ? model.purposeEn : model.purpose}</span>
             </div>
-            <b>{model.confidence}%</b>
+            <span className="model-planned">{t("σχεδιασμός", "roadmap")}</span>
           </div>
         ))}
       </div>
@@ -2952,9 +2963,10 @@ function AiResultPanel({ report }) {
     <section className="panel-grid">
       <article className="info-panel wide ai-result">
         <div>
-          <p className="eyebrow">{t("AI αναγνώριση φωτογραφίας", "AI photo recognition")}</p>
+          <p className="eyebrow">{t("AI αναγνώριση φωτογραφίας · ενδεικτικό demo", "AI photo recognition · indicative demo")}</p>
           <h2>{t("Πιθανός λαγοκέφαλος", "Likely pufferfish")}</h2>
-          <strong>{report.ai}%</strong>
+          <strong>{report.ai}% <span className="ai-demo-tag">{t("ενδεικτικά", "indicative")}</span></strong>
+          <p>{t("Ενδεικτική εκτίμηση επίδειξης — η τελική επιβεβαίωση γίνεται από ειδικό μετά τον έλεγχο.", "Indicative demo estimate — final confirmation is made by an expert after review.")}</p>
           <p>{t("Κατάσταση: στάλθηκε για έλεγχο.", "Status: sent for review.")}</p>
           <p>{t("Οδηγία: Μην το αγγίζεις, μην το μετακινείς και μην το καταναλώσεις.", "Guidance: Do not touch it, do not move it and do not eat it.")}</p>
         </div>
@@ -3138,7 +3150,7 @@ function AuthorityMonitor({ zones, realPoints, sightings, onExit, onRefresh }) {
       <div className="ops-body">
         <section className="ops-status" style={{ borderColor: statusColor }}>
           <p className="ops-status-eyebrow">{t("ΚΑΤΑΣΤΑΣΗ ΠΕΡΙΟΧΗΣ", "AREA STATUS")} — {region}</p>
-          {top ? (
+          {top && top.live !== false ? (
             <>
               <div className="ops-status-main">
                 <span className="ops-status-level" style={{ color: statusColor }}>{monitorLevel(top.risk, lang)}</span>
@@ -3160,29 +3172,32 @@ function AuthorityMonitor({ zones, realPoints, sightings, onExit, onRefresh }) {
         <section className="ops-zones">
           <h3>{t("Ζώνες περιοχής", "Area zones")}</h3>
           <div className="ops-zone-grid">
-            {regionZones.map((z) => (
+            {regionZones.map((z) => {
+              const nl = z.live === false;
+              return (
               <div key={z.id} className="ops-zone-card" style={{ borderColor: z.color }}>
                 <div className="ops-zone-top">
                   <span className="ops-zone-name">{z.area}</span>
-                  <span className="ops-zone-risk" style={{ background: z.color, color: riskInk(z.color) }}>{z.risk}</span>
+                  <span className="ops-zone-risk" style={{ background: z.color, color: riskInk(z.color) }}>{nl ? "—" : z.risk}</span>
                 </div>
                 <div className="ops-zone-facts">
                   <span>{z.sst != null ? `${z.sst.toFixed(1)}°C` : "—"}</span>
-                  <span>{monitorLevel(z.risk, lang)}</span>
+                  <span>{nl ? t("Δεν φορτώθηκε", "Not loaded") : monitorLevel(z.risk, lang)}</span>
                   <span>{z.occRecent || 0} {t("καταγρ.", "rec.")}</span>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
         <aside className="ops-alerts">
           <h3><Siren size={18} aria-hidden="true" /> {t("Στοχευμένη ανίχνευση", "Targeted detection")}</h3>
-          {regionZones.filter((z) => z.risk >= 66).length === 0 && (
+          {regionZones.filter((z) => z.live && z.risk >= 66).length === 0 && (
             <p className="ops-alert-none">{t("Καμία ζώνη υψηλού κινδύνου αυτή τη στιγμή.", "No high-risk zone at this time.")}</p>
           )}
           {regionZones
-            .filter((z) => z.risk >= 66)
+            .filter((z) => z.live && z.risk >= 66)
             .map((z) => (
               <div key={z.id} className="ops-alert-row" style={{ borderColor: z.color }}>
                 <AlertTriangle size={16} style={{ color: z.color }} aria-hidden="true" />
