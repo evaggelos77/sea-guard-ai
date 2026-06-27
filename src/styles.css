@@ -2056,3 +2056,45 @@ td {
   background: rgba(216,66,66,0.08); border: 1px solid rgba(216,66,66,0.3);
 }
 @media (max-width: 560px) { .recognition-body { grid-template-columns: 1fr; justify-items: center; } }
+
+/* QR per-beach overlay */
+.qr-overlay {
+  position: fixed; inset: 0; z-index: 1200;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  background: rgba(7, 31, 41, 0.62); backdrop-filter: blur(6px);
+  animation: qrFade 0.18s ease-out;
+}
+@keyframes qrFade { from { opacity: 0; } to { opacity: 1; } }
+.qr-card {
+  position: relative; width: min(380px, 92vw);
+  background: #ffffff; border-radius: 22px; padding: 30px 26px 24px;
+  text-align: center; box-shadow: 0 28px 70px rgba(7, 31, 41, 0.4);
+  border: 1px solid rgba(11, 61, 77, 0.1);
+  animation: qrPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes qrPop { from { transform: translateY(14px) scale(0.96); opacity: 0; } to { transform: none; opacity: 1; } }
+.qr-x {
+  position: absolute; top: 12px; right: 12px;
+  background: none; border: none; cursor: pointer; color: #8aa0a8; padding: 4px;
+  display: inline-flex; border-radius: 50%; transition: color 0.15s, background 0.15s;
+}
+.qr-x:hover { color: #0b3d4d; background: rgba(11, 61, 77, 0.08); }
+.qr-kicker {
+  display: inline-block; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.12em;
+  color: #1d7fa3; text-transform: uppercase; margin-bottom: 6px;
+}
+.qr-card h3 { margin: 0 0 6px; font-size: 1.3rem; color: #0b3d4d; font-family: "Commissioner", sans-serif; }
+.qr-card p { margin: 0 0 16px; font-size: 0.9rem; color: #45616b; line-height: 1.45; }
+.qr-img {
+  width: 240px; height: 240px; display: block; margin: 0 auto 18px;
+  border-radius: 16px; border: 1px solid rgba(11, 61, 77, 0.12); background: #fff;
+}
+.qr-loading {
+  width: 240px; height: 240px; margin: 0 auto 18px; border-radius: 16px;
+  background: linear-gradient(110deg, #eef4f6 30%, #dfeaee 50%, #eef4f6 70%);
+  background-size: 220% 100%; animation: qrShimmer 1.1s ease-in-out infinite;
+}
+@keyframes qrShimmer { from { background-position: 220% 0; } to { background-position: -20% 0; } }
+.qr-actions { display: flex; justify-content: center; margin-bottom: 12px; }
+.qr-actions .primary-action { width: 100%; justify-content: center; }
+.qr-hint { margin: 0 !important; font-size: 0.78rem !important; color: #8aa0a8 !important; }

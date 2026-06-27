@@ -28,6 +28,7 @@ import {
   Megaphone,
   Play,
   Pause,
+  QrCode,
   Share2,
   Radio,
   Radar,
@@ -946,6 +947,13 @@ function App() {
                 <dd>{selectedZone.occRecent != null ? selectedZone.occRecent : "—"}</dd>
               </div>
               <div>
+                <dt>{t("Θάλασσα σήμερα", "Sea today")}</dt>
+                <dd>
+                  {selectedZone.wave != null ? `🌊 ${selectedZone.wave.toFixed(1)} m` : "—"}
+                  {selectedZone.currentVel != null ? ` · ${t("ρεύμα", "current")} ${selectedZone.currentVel.toFixed(1)} km/h` : ""}
+                </dd>
+              </div>
+              <div>
                 <dt>{t("Σύσταση", "Recommendation")}</dt>
                 <dd>{lang === "en" && selectedZone.recommendationEn ? selectedZone.recommendationEn : selectedZone.recommendation}</dd>
               </div>
@@ -959,6 +967,7 @@ function App() {
                 <FollowStar active={follows.includes(selectedZone.id)} onClick={() => toggleFollow(selectedZone.id)} />
               )}
               <ShareButton zone={selectedZone} />
+              <QrButton zone={selectedZone} />
             </div>
           </aside>
         </div>
@@ -1337,6 +1346,68 @@ function ShareButton({ zone }) {
       <Share2 size={18} aria-hidden="true" />
       {copied ? t("Αντιγράφηκε!", "Copied!") : t("Κοινοποίηση", "Share")}
     </button>
+  );
+}
+
+function QrButton({ zone }) {
+  const { t, lang } = useLang();
+  const [open, setOpen] = useState(false);
+  const [dataUrl, setDataUrl] = useState("");
+  const link = `https://evaggelos77.github.io/sea-guard-ai/?${
+    zone.id === "__search" ? `q=${encodeURIComponent(zone.area)}` : `zone=${zone.id}`
+  }&lang=${lang}`;
+  useEffect(() => {
+    if (!open) return undefined;
+    let alive = true;
+    setDataUrl("");
+    import("qrcode")
+      .then((mod) => (mod.default || mod).toDataURL(link, {
+        width: 360,
+        margin: 2,
+        errorCorrectionLevel: "M",
+        color: { dark: "#0b3d4d", light: "#ffffff" },
+      }))
+      .then((u) => {
+        if (alive) setDataUrl(u);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [open, link]);
+  return (
+    <>
+      <button type="button" className="secondary-action" onClick={() => setOpen(true)}>
+        <QrCode size={18} aria-hidden="true" />
+        {t("Κωδικός QR", "QR code")}
+      </button>
+      {open && (
+        <div className="qr-overlay" role="dialog" aria-modal="true" onClick={() => setOpen(false)}>
+          <div className="qr-card" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="qr-x" onClick={() => setOpen(false)} aria-label={t("Κλείσιμο", "Close")}>
+              <XCircle size={22} aria-hidden="true" />
+            </button>
+            <span className="qr-kicker">EV SEA GUARD AI</span>
+            <h3>{zone.area}</h3>
+            <p>{t("Σκάναρε για ζωντανό κίνδυνο λαγοκέφαλου σε αυτή την παραλία.", "Scan for the live pufferfish risk at this beach.")}</p>
+            {dataUrl ? (
+              <img src={dataUrl} alt={t("Κωδικός QR παραλίας", "Beach QR code")} className="qr-img" />
+            ) : (
+              <div className="qr-loading" aria-hidden="true" />
+            )}
+            <div className="qr-actions">
+              {dataUrl && (
+                <a className="primary-action" href={dataUrl} download={`SeaGuard-${zone.id === "__search" ? "search" : zone.id}.png`}>
+                  <Download size={18} aria-hidden="true" />
+                  {t("Κατέβασε QR (αφίσα)", "Download QR (poster)")}
+                </a>
+              )}
+            </div>
+            <p className="qr-hint">{t("Ιδανικό για πινακίδες Δήμων, ξενοδοχεία & beach bar.", "Ideal for municipal signage, hotels & beach bars.")}</p>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -1755,6 +1826,7 @@ function AreaSearchPanel({
             <FollowStar active={(follows || []).includes(selectedZone.id)} onClick={() => onToggleFollow(selectedZone.id)} />
           )}
           <ShareButton zone={selectedZone} />
+          <QrButton zone={selectedZone} />
         </div>
       </div>
     </section>
