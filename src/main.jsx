@@ -132,41 +132,56 @@ const satelliteFeeds = [
   {
     id: "sst",
     name: "Open-Meteo Marine · SST",
+    nameEn: "Open-Meteo Marine · SST",
     signal: 96,
     cadence: "ζωντανά, ανά ώρα",
+    cadenceEn: "live, hourly",
     detail: "Θερμοκρασία επιφάνειας θάλασσας (πραγματικά δεδομένα)",
+    detailEn: "Sea-surface temperature (real data)",
     status: "live"
   },
   {
     id: "currents",
     name: "Open-Meteo Marine · Ρεύματα & κύμα",
+    nameEn: "Open-Meteo Marine · Currents & waves",
     signal: 92,
     cadence: "ζωντανά, ανά ώρα",
+    cadenceEn: "live, hourly",
     detail: "Ταχύτητα/κατεύθυνση ρευμάτων και ύψος κύματος",
+    detailEn: "Current speed/direction and wave height",
     status: "live"
   },
   {
     id: "gbif",
     name: "GBIF · Καταγραφές είδους",
+    nameEn: "GBIF · Species records",
     signal: 90,
     cadence: "ζωντανά",
+    cadenceEn: "live",
     detail: "Πραγματικές καταγραφές Lagocephalus sceleratus (iNaturalist/HCMR/μουσεία)",
+    detailEn: "Real Lagocephalus sceleratus records (iNaturalist/HCMR/museums)",
     status: "live"
   },
   {
     id: "copernicus",
     name: "Copernicus Marine · χλωροφύλλη",
+    nameEn: "Copernicus Marine · chlorophyll",
     signal: 60,
     cadence: "υπό ενσωμάτωση",
+    cadenceEn: "being integrated",
     detail: "Βιογεωχημικά & δορυφορικά προϊόντα (επόμενη φάση)",
+    detailEn: "Biogeochemical & satellite products (next phase)",
     status: "planned"
   },
   {
     id: "bathymetry",
     name: "EMODnet Bathymetry",
+    nameEn: "EMODnet Bathymetry",
     signal: 55,
     cadence: "υπό ενσωμάτωση",
+    cadenceEn: "being integrated",
     detail: "Βάθος, κλίση βυθού, απόσταση ακτής (επόμενη φάση)",
+    detailEn: "Depth, seabed slope, distance to shore (next phase)",
     status: "planned"
   }
 ];
@@ -175,27 +190,32 @@ const aiModels = [
   {
     name: "Satellite Fusion AI",
     confidence: 93,
-    purpose: "Συνθέτει δορυφορικές και θαλάσσιες μεταβλητές."
+    purpose: "Συνθέτει δορυφορικές και θαλάσσιες μεταβλητές.",
+    purposeEn: "Fuses satellite and marine variables."
   },
   {
     name: "Vision Recognition",
     confidence: 88,
-    purpose: "Αναγνωρίζει χαρακτηριστικά λαγοκέφαλου από φωτογραφίες."
+    purpose: "Αναγνωρίζει χαρακτηριστικά λαγοκέφαλου από φωτογραφίες.",
+    purposeEn: "Identifies pufferfish features from photos."
   },
   {
     name: "Hotspot Predictor",
     confidence: 91,
-    purpose: "Προβλέπει πιθανές ζώνες παρουσίας 24/48/72h."
+    purpose: "Προβλέπει πιθανές ζώνες παρουσίας 24/48/72h.",
+    purposeEn: "Predicts likely presence zones at 24/48/72h."
   },
   {
     name: "Duplicate Guard",
     confidence: 86,
-    purpose: "Ελέγχει διπλές, ψευδείς ή ύποπτες αναφορές."
+    purpose: "Ελέγχει διπλές, ψευδείς ή ύποπτες αναφορές.",
+    purposeEn: "Flags duplicate, fake or suspicious reports."
   },
   {
     name: "Authority Copilot",
     confidence: 90,
-    purpose: "Παράγει σύνοψη, ειδοποίηση και αναφορά φορέα."
+    purpose: "Παράγει σύνοψη, ειδοποίηση και αναφορά φορέα.",
+    purposeEn: "Generates summary, alert and authority report."
   }
 ];
 
@@ -833,22 +853,23 @@ function App() {
 }
 
 const SCROLL_SECTIONS = [
-  { sel: ".topbar", label: "Αρχή" },
-  { sel: ".area-search-panel", label: "Περιοχή" },
-  { sel: ".mission-theater", label: "Δορυφόρος AI" },
-  { sel: ".invasion-map", label: "Χάρτης Ελλάδας" },
-  { sel: ".metrics-grid", label: "Δείκτες" },
-  { sel: ".workspace-grid", label: "Ζώνες χάρτη" },
-  { sel: ".content-switcher", label: "Ενότητες" },
+  { sel: ".topbar", label: "Αρχή", labelEn: "Top" },
+  { sel: ".area-search-panel", label: "Περιοχή", labelEn: "Area" },
+  { sel: ".mission-theater", label: "Δορυφόρος AI", labelEn: "Satellite AI" },
+  { sel: ".invasion-map", label: "Χάρτης Ελλάδας", labelEn: "Greece map" },
+  { sel: ".metrics-grid", label: "Δείκτες", labelEn: "Metrics" },
+  { sel: ".workspace-grid", label: "Ζώνες χάρτη", labelEn: "Map zones" },
+  { sel: ".content-switcher", label: "Ενότητες", labelEn: "Sections" },
 ];
 
 function ScrollDots() {
+  const { t, lang } = useLang();
   const [items, setItems] = useState([]);
   const [active, setActive] = useState(0);
   const elsRef = useRef([]);
 
   useEffect(() => {
-    const found = SCROLL_SECTIONS.map((s) => ({ label: s.label, el: document.querySelector(s.sel) })).filter(
+    const found = SCROLL_SECTIONS.map((s) => ({ label: lang === "en" ? s.labelEn : s.label, el: document.querySelector(s.sel) })).filter(
       (x) => x.el
     );
     elsRef.current = found;
@@ -867,7 +888,7 @@ function ScrollDots() {
     );
     found.forEach((f) => io.observe(f.el));
     return () => io.disconnect();
-  }, []);
+  }, [lang]);
 
   const goTo = (i) => {
     const target = elsRef.current[i];
@@ -876,13 +897,13 @@ function ScrollDots() {
   if (items.length < 2) return null;
 
   return (
-    <nav className="scroll-rail" aria-label="Πλοήγηση ενοτήτων">
+    <nav className="scroll-rail" aria-label={t("Πλοήγηση ενοτήτων", "Section navigation")}>
       <button
         type="button"
         className="scroll-arrow"
         onClick={() => goTo(Math.max(0, active - 1))}
         disabled={active === 0}
-        aria-label="Προηγούμενη ενότητα"
+        aria-label={t("Προηγούμενη ενότητα", "Previous section")}
       >
         <ChevronUp size={16} />
       </button>
@@ -905,7 +926,7 @@ function ScrollDots() {
         className="scroll-arrow"
         onClick={() => goTo(Math.min(items.length - 1, active + 1))}
         disabled={active === items.length - 1}
-        aria-label="Επόμενη ενότητα"
+        aria-label={t("Επόμενη ενότητα", "Next section")}
       >
         <ChevronDown size={16} />
       </button>
@@ -1828,13 +1849,14 @@ function Metric({ icon: Icon, label, value, tone = "default" }) {
 }
 
 function RiskLegend() {
+  const { t } = useLang();
   return (
-    <div className="legend" aria-label="Υπόμνημα κινδύνου">
-      <span><i style={{ background: "#2fa66a" }} />Χαμηλή</span>
-      <span><i style={{ background: "#e6c84f" }} />Μέτρια</span>
-      <span><i style={{ background: "#f08c2e" }} />Αυξημένη</span>
+    <div className="legend" aria-label={t("Υπόμνημα κινδύνου", "Risk legend")}>
+      <span><i style={{ background: "#2fa66a" }} />{t("Χαμηλή", "Low")}</span>
+      <span><i style={{ background: "#e6c84f" }} />{t("Μέτρια", "Moderate")}</span>
+      <span><i style={{ background: "#f08c2e" }} />{t("Αυξημένη", "Elevated")}</span>
       <span><i style={{ background: "#e73d3d" }} />Hotspot</span>
-      <span><i style={{ background: "#111" }} />Σοβαρό</span>
+      <span><i style={{ background: "#111" }} />{t("Σοβαρό", "Severe")}</span>
     </div>
   );
 }
@@ -2007,24 +2029,27 @@ function AiSystem({ title, detail }) {
 }
 
 function RiskEnginePanel({ selectedZone, sightings, catches, forecast }) {
+  const { t, lang } = useLang();
   const bd = selectedZone.breakdown;
   const breakdownRows = bd
     ? [
         {
-          label: "Καταλληλότητα θερμοκρασίας (SST)",
+          label: t("Καταλληλότητα θερμοκρασίας (SST)", "Temperature suitability (SST)"),
           value: bd.sst,
           detail:
-            selectedZone.sst != null ? `${selectedZone.sst.toFixed(1)}°C · βαρύτητα 45%` : "βαρύτητα 45%",
+            selectedZone.sst != null
+              ? t(`${selectedZone.sst.toFixed(1)}°C · βαρύτητα 45%`, `${selectedZone.sst.toFixed(1)}°C · weight 45%`)
+              : t("βαρύτητα 45%", "weight 45%"),
         },
         {
-          label: "Πραγματική παρουσία (GBIF)",
+          label: t("Πραγματική παρουσία (GBIF)", "Real presence (GBIF)"),
           value: bd.occurrence,
-          detail: `${selectedZone.occRecent ?? 0} καταγραφές/3ετία · βαρύτητα 35%`,
+          detail: t(`${selectedZone.occRecent ?? 0} καταγραφές/3ετία · βαρύτητα 35%`, `${selectedZone.occRecent ?? 0} records/3y · weight 35%`),
         },
         {
-          label: "Σήμα κοινότητας",
+          label: t("Σήμα κοινότητας", "Community signal"),
           value: bd.community,
-          detail: "αναφορές + κιλά αλιέων · βαρύτητα 20%",
+          detail: t("αναφορές + κιλά αλιέων · βαρύτητα 20%", "reports + fishermen kg · weight 20%"),
         },
       ]
     : null;
@@ -2034,8 +2059,8 @@ function RiskEnginePanel({ selectedZone, sightings, catches, forecast }) {
       <article className="info-panel wide">
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">Lagokefalos Risk Engine · ζωντανός υπολογισμός</p>
-            <h2>Risk Score {selectedZone.risk}/100 για {selectedZone.area}</h2>
+            <p className="eyebrow">{t("Lagokefalos Risk Engine · ζωντανός υπολογισμός", "Lagokefalos Risk Engine · live calculation")}</p>
+            <h2>{t(`Risk Score ${selectedZone.risk}/100 για ${selectedZone.area}`, `Risk Score ${selectedZone.risk}/100 for ${selectedZone.area}`)}</h2>
           </div>
           <Gauge size={24} aria-hidden="true" />
         </div>
@@ -2055,19 +2080,24 @@ function RiskEnginePanel({ selectedZone, sightings, catches, forecast }) {
             </div>
             <p className="notice-line" style={{ marginTop: 12 }}>
               <BrainCircuit size={16} aria-hidden="true" />
-              Τύπος: Risk = 45%·SST + 35%·Παρουσία + 20%·Κοινότητα (διαφανές, χωρίς «μαύρο κουτί»).
+              {t(
+                "Τύπος: Risk = 45%·SST + 35%·Παρουσία + 20%·Κοινότητα (διαφανές, χωρίς «μαύρο κουτί»).",
+                "Formula: Risk = 45%·SST + 35%·Presence + 20%·Community (transparent, no black box)."
+              )}
             </p>
           </>
         ) : (
-          <p>Φόρτωση ζωντανών δεδομένων για τον υπολογισμό κινδύνου…</p>
+          <p>{t("Φόρτωση ζωντανών δεδομένων για τον υπολογισμό κινδύνου…", "Loading live data for the risk calculation…")}</p>
         )}
       </article>
       <article className="info-panel">
-        <h3>Σύσταση περιοχής</h3>
-        <p>{selectedZone.recommendation}</p>
+        <h3>{t("Σύσταση περιοχής", "Area recommendation")}</h3>
+        <p>{lang === "en" && selectedZone.recommendationEn ? selectedZone.recommendationEn : selectedZone.recommendation}</p>
         <div className="notice-line">
           <Megaphone size={18} aria-hidden="true" />
-          {selectedZone.risk >= 80 ? "Προτείνεται ανακοίνωση φορέα." : "Συνέχιση παρακολούθησης."}
+          {selectedZone.risk >= 80
+            ? t("Προτείνεται ανακοίνωση φορέα.", "An authority announcement is recommended.")
+            : t("Συνέχιση παρακολούθησης.", "Continue monitoring.")}
         </div>
       </article>
       <ForecastPanel forecast={forecast} />
@@ -2078,12 +2108,13 @@ function RiskEnginePanel({ selectedZone, sightings, catches, forecast }) {
 }
 
 function ForecastPanel({ forecast }) {
+  const { t } = useLang();
   return (
     <article className="info-panel wide">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">Predictive forecast</p>
-          <h3>Πρόβλεψη κινδύνου 24/48/72h</h3>
+          <p className="eyebrow">{t("Predictive forecast", "Predictive forecast")}</p>
+          <h3>{t("Πρόβλεψη κινδύνου 24/48/72h", "24/48/72h risk forecast")}</h3>
         </div>
         <TrendingUp size={22} aria-hidden="true" />
       </div>
@@ -2104,12 +2135,13 @@ function ForecastPanel({ forecast }) {
 }
 
 function SatelliteFeedsPanel() {
+  const { t, lang } = useLang();
   return (
     <article className="info-panel wide">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">Satellite data fusion</p>
-          <h3>Ζωντανές πηγές δεδομένων</h3>
+          <p className="eyebrow">{t("Satellite data fusion", "Satellite data fusion")}</p>
+          <h3>{t("Ζωντανές πηγές δεδομένων", "Live data sources")}</h3>
         </div>
         <Satellite size={22} aria-hidden="true" />
       </div>
@@ -2117,17 +2149,17 @@ function SatelliteFeedsPanel() {
         {satelliteFeeds.map((feed) => (
           <div className={`feed-card feed-card--${feed.status}`} key={feed.id}>
             <div>
-              <strong>{feed.name}</strong>
-              <span>{feed.detail}</span>
+              <strong>{lang === "en" ? feed.nameEn : feed.name}</strong>
+              <span>{lang === "en" ? feed.detailEn : feed.detail}</span>
             </div>
             <div className="feed-meter">
               <i style={{ width: `${feed.signal}%` }} />
             </div>
             <small>
               <span className={`feed-badge feed-badge--${feed.status}`}>
-                {feed.status === "live" ? "ΖΩΝΤΑΝΟ" : "ΕΠΟΜΕΝΗ ΦΑΣΗ"}
+                {feed.status === "live" ? t("ΖΩΝΤΑΝΟ", "LIVE") : t("ΕΠΟΜΕΝΗ ΦΑΣΗ", "NEXT PHASE")}
               </span>{" "}
-              {feed.cadence}
+              {lang === "en" ? feed.cadenceEn : feed.cadence}
             </small>
           </div>
         ))}
@@ -2137,12 +2169,13 @@ function SatelliteFeedsPanel() {
 }
 
 function AiModelStackPanel() {
+  const { t, lang } = useLang();
   return (
     <article className="info-panel wide">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">AI systems</p>
-          <h3>Συνεργαζόμενα μοντέλα νοημοσύνης</h3>
+          <p className="eyebrow">{t("AI systems", "AI systems")}</p>
+          <h3>{t("Συνεργαζόμενα μοντέλα νοημοσύνης", "Collaborating AI models")}</h3>
         </div>
         <BrainCircuit size={22} aria-hidden="true" />
       </div>
@@ -2151,7 +2184,7 @@ function AiModelStackPanel() {
           <div className="model-row" key={model.name}>
             <div>
               <strong>{model.name}</strong>
-              <span>{model.purpose}</span>
+              <span>{lang === "en" ? model.purposeEn : model.purpose}</span>
             </div>
             <b>{model.confidence}%</b>
           </div>
@@ -2162,69 +2195,72 @@ function AiModelStackPanel() {
 }
 
 function CitizenReportPanel({ onSubmit, selectedZone, locateUser }) {
+  const { t } = useLang();
   return (
     <section className="panel-grid">
       <form className="info-panel wide form-panel" onSubmit={onSubmit}>
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">Πολίτης / λουόμενος</p>
-            <h2>Αναφορά λαγοκέφαλου</h2>
+            <p className="eyebrow">{t("Πολίτης / λουόμενος", "Citizen / swimmer")}</p>
+            <h2>{t("Αναφορά λαγοκέφαλου", "Report a pufferfish")}</h2>
           </div>
           <Camera size={24} aria-hidden="true" />
         </div>
         <div className="form-grid">
           <label>
-            Φωτογραφία
+            {t("Φωτογραφία", "Photo")}
             <input name="photo" type="file" accept="image/*" />
           </label>
           <label>
-            Περιοχή / παραλία
+            {t("Περιοχή / παραλία", "Area / beach")}
             <input name="area" type="text" placeholder={selectedZone.area} />
           </label>
           <label>
-            Το είδα
+            {t("Το είδα", "I saw it")}
             <select name="place" defaultValue="στη θάλασσα">
-              <option>στη θάλασσα</option>
-              <option>έξω στην ακτή</option>
-              <option>σε αλιευτικά εργαλεία</option>
+              <option value="στη θάλασσα">{t("στη θάλασσα", "in the sea")}</option>
+              <option value="έξω στην ακτή">{t("έξω στην ακτή", "out on the shore")}</option>
+              <option value="σε αλιευτικά εργαλεία">{t("σε αλιευτικά εργαλεία", "in fishing gear")}</option>
             </select>
           </label>
           <label>
-            Κατάσταση
+            {t("Κατάσταση", "Condition")}
             <select name="condition" defaultValue="ζωντανό">
-              <option>ζωντανό</option>
-              <option>νεκρό</option>
-              <option>άγνωστο</option>
+              <option value="ζωντανό">{t("ζωντανό", "alive")}</option>
+              <option value="νεκρό">{t("νεκρό", "dead")}</option>
+              <option value="άγνωστο">{t("άγνωστο", "unknown")}</option>
             </select>
           </label>
           <label>
-            Υπήρξε δάγκωμα;
+            {t("Υπήρξε δάγκωμα;", "Was there a bite?")}
             <select name="bite" defaultValue="Όχι">
-              <option>Όχι</option>
-              <option>Ναι</option>
+              <option value="Όχι">{t("Όχι", "No")}</option>
+              <option value="Ναι">{t("Ναι", "Yes")}</option>
             </select>
           </label>
           <label className="full">
-            Σχόλιο
-            <textarea name="comment" rows="4" placeholder="Σύντομη περιγραφή περιστατικού" />
+            {t("Σχόλιο", "Comment")}
+            <textarea name="comment" rows="4" placeholder={t("Σύντομη περιγραφή περιστατικού", "Short description of the incident")} />
           </label>
         </div>
         <div className="form-actions">
           <button type="button" className="secondary-action" onClick={locateUser}>
             <LocateFixed size={18} aria-hidden="true" />
-            Αυτόματο GPS
+            {t("Αυτόματο GPS", "Auto GPS")}
           </button>
           <button type="submit" className="primary-action">
             <Upload size={18} aria-hidden="true" />
-            Αποστολή
+            {t("Αποστολή", "Send")}
           </button>
         </div>
       </form>
       <article className="info-panel">
-        <h3>Μετά την αποστολή</h3>
+        <h3>{t("Μετά την αποστολή", "After you send")}</h3>
         <p>
-          Η αναφορά καταχωρείται ως pending, περνά από demo AI αναγνώριση φωτογραφίας και μετά
-          εμφανίζεται στο admin panel για έγκριση ή απόρριψη.
+          {t(
+            "Η αναφορά καταχωρείται ως pending, περνά από demo AI αναγνώριση φωτογραφίας και μετά εμφανίζεται στο admin panel για έγκριση ή απόρριψη.",
+            "The report is logged as pending, goes through demo AI photo recognition and then appears in the admin panel for approval or rejection."
+          )}
         </p>
       </article>
     </section>
@@ -2232,16 +2268,17 @@ function CitizenReportPanel({ onSubmit, selectedZone, locateUser }) {
 }
 
 function AiResultPanel({ report }) {
+  const { t } = useLang();
   if (!report) return null;
   return (
     <section className="panel-grid">
       <article className="info-panel wide ai-result">
         <div>
-          <p className="eyebrow">AI αναγνώριση φωτογραφίας</p>
-          <h2>Πιθανός λαγοκέφαλος</h2>
+          <p className="eyebrow">{t("AI αναγνώριση φωτογραφίας", "AI photo recognition")}</p>
+          <h2>{t("Πιθανός λαγοκέφαλος", "Likely pufferfish")}</h2>
           <strong>{report.ai}%</strong>
-          <p>Κατάσταση: στάλθηκε για έλεγχο.</p>
-          <p>Οδηγία: Μην το αγγίζεις, μην το μετακινείς και μην το καταναλώσεις.</p>
+          <p>{t("Κατάσταση: στάλθηκε για έλεγχο.", "Status: sent for review.")}</p>
+          <p>{t("Οδηγία: Μην το αγγίζεις, μην το μετακινείς και μην το καταναλώσεις.", "Guidance: Do not touch it, do not move it and do not eat it.")}</p>
         </div>
         <Fish size={72} aria-hidden="true" />
       </article>
@@ -2250,6 +2287,7 @@ function AiResultPanel({ report }) {
 }
 
 function FishermanPanel({ catches, onSubmit }) {
+  const { t, lang } = useLang();
   const totalKg = catches.reduce((sum, item) => sum + Number(item.kg || 0), 0);
   const estimatedCompensation = totalKg * 5.33;
 
@@ -2258,80 +2296,83 @@ function FishermanPanel({ catches, onSubmit }) {
       <form className="info-panel wide form-panel" onSubmit={onSubmit}>
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">Panel ψαρά</p>
-            <h2>Νέα δήλωση αλίευσης</h2>
+            <p className="eyebrow">{t("Panel ψαρά", "Fisherman panel")}</p>
+            <h2>{t("Νέα δήλωση αλίευσης", "New catch declaration")}</h2>
           </div>
           <Anchor size={24} aria-hidden="true" />
         </div>
         <div className="form-grid">
           <label>
-            Όνομα σκάφους
-            <input name="vessel" type="text" placeholder="π.χ. ΑΓ. ΝΙΚΟΛΑΟΣ" />
+            {t("Όνομα σκάφους", "Vessel name")}
+            <input name="vessel" type="text" placeholder={t("π.χ. ΑΓ. ΝΙΚΟΛΑΟΣ", "e.g. AG. NIKOLAOS")} />
           </label>
           <label>
-            Λιμάνι
-            <input name="port" type="text" placeholder="π.χ. Ηράκλειο" />
+            {t("Λιμάνι", "Port")}
+            <input name="port" type="text" placeholder={t("π.χ. Ηράκλειο", "e.g. Heraklion")} />
           </label>
           <label>
-            GPS αλίευσης
+            {t("GPS αλίευσης", "Catch GPS")}
             <input name="gps" type="text" placeholder="35.12, 25.20" />
           </label>
           <label>
-            Κιλά λαγοκέφαλου
+            {t("Κιλά λαγοκέφαλου", "Pufferfish kg")}
             <input name="kg" type="number" min="0" step="0.1" placeholder="0" />
           </label>
           <label>
-            Περιοχή
-            <input name="area" type="text" placeholder="Περιοχή αλίευσης" />
+            {t("Περιοχή", "Area")}
+            <input name="area" type="text" placeholder={t("Περιοχή αλίευσης", "Catch area")} />
           </label>
           <label>
-            Φωτογραφίες
+            {t("Φωτογραφίες", "Photos")}
             <input name="photos" type="file" accept="image/*" multiple />
           </label>
           <label className="full">
-            Ζημιές σε δίχτυα / παραγάδια
-            <textarea name="damage" rows="3" placeholder="Περιγραφή ζημιάς" />
+            {t("Ζημιές σε δίχτυα / παραγάδια", "Damage to nets / long-lines")}
+            <textarea name="damage" rows="3" placeholder={t("Περιγραφή ζημιάς", "Damage description")} />
           </label>
         </div>
         <div className="form-actions">
           <button type="submit" className="primary-action">
             <ClipboardCheck size={18} aria-hidden="true" />
-            Υποβολή δήλωσης
+            {t("Υποβολή δήλωσης", "Submit declaration")}
           </button>
         </div>
       </form>
       <article className="info-panel">
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">Pilot action calculator</p>
-            <h3>Εκτίμηση διαχείρισης κιλών</h3>
+            <p className="eyebrow">{t("Pilot action calculator", "Pilot action calculator")}</p>
+            <h3>{t("Εκτίμηση διαχείρισης κιλών", "Kg management estimate")}</h3>
           </div>
           <Fish size={22} aria-hidden="true" />
         </div>
         <div className="compensation-box">
-          <span>Σύνολο δηλωμένων κιλών</span>
+          <span>{t("Σύνολο δηλωμένων κιλών", "Total declared kg")}</span>
           <strong>{totalKg} kg</strong>
-          <span>Demo καθαρή αμοιβή 5,33€/kg</span>
-          <strong>{estimatedCompensation.toLocaleString("el-GR", { style: "currency", currency: "EUR" })}</strong>
+          <span>{t("Demo καθαρή αμοιβή 5,33€/kg", "Demo net rate €5.33/kg")}</span>
+          <strong>{estimatedCompensation.toLocaleString(lang === "en" ? "en-GB" : "el-GR", { style: "currency", currency: "EUR" })}</strong>
         </div>
         <p>
-          Η παραγωγική έκδοση θα συνδέει δήλωση, σημείο παράδοσης, έγκριση φορέα, ψύξη,
-          καύση και ιστορικό πληρωμών.
+          {t(
+            "Η παραγωγική έκδοση θα συνδέει δήλωση, σημείο παράδοσης, έγκριση φορέα, ψύξη, καύση και ιστορικό πληρωμών.",
+            "The production version will link declaration, delivery point, authority approval, cold storage, incineration and payment history."
+          )}
         </p>
       </article>
-      <DataTable title="Τελευταίες δηλώσεις αλιέων" rows={catches} type="catch" />
+      <DataTable title={t("Τελευταίες δηλώσεις αλιέων", "Latest fishermen declarations")} rows={catches} type="catch" />
     </section>
   );
 }
 
 function AuthorityPanel({ sightings, catches, selectedZone, forecast, authorityAction, exportCsv, exportPdf }) {
+  const { t } = useLang();
   return (
     <section className="panel-grid">
       <article className="info-panel wide">
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">Dashboard φορέα</p>
-            <h2>Περιοχή ελέγχου: {selectedZone.area}</h2>
+            <p className="eyebrow">{t("Dashboard φορέα", "Authority dashboard")}</p>
+            <h2>{t(`Περιοχή ελέγχου: ${selectedZone.area}`, `Monitored area: ${selectedZone.area}`)}</h2>
           </div>
           <div className="export-actions">
             <button type="button" className="secondary-action" onClick={exportPdf}>
@@ -2345,43 +2386,51 @@ function AuthorityPanel({ sightings, catches, selectedZone, forecast, authorityA
           </div>
         </div>
         <div className="authority-grid">
-          <Metric icon={Bell} label="Σύνολο αναφορών" value={sightings.length} />
-          <Metric icon={BadgeCheck} label="Επιβεβαιωμένες" value={sightings.filter((item) => item.status === "verified").length} />
-          <Metric icon={Fish} label="Δηλώσεις ψαράδων" value={catches.length} />
-          <Metric icon={AlertTriangle} label="Περιστατικά δαγκώματος" value={sightings.filter((item) => item.bite === "Ναι").length} tone="danger" />
+          <Metric icon={Bell} label={t("Σύνολο αναφορών", "Total reports")} value={sightings.length} />
+          <Metric icon={BadgeCheck} label={t("Επιβεβαιωμένες", "Confirmed")} value={sightings.filter((item) => item.status === "verified").length} />
+          <Metric icon={Fish} label={t("Δηλώσεις ψαράδων", "Fishermen declarations")} value={catches.length} />
+          <Metric icon={AlertTriangle} label={t("Περιστατικά δαγκώματος", "Bite incidents")} value={sightings.filter((item) => item.bite === "Ναι").length} tone="danger" />
         </div>
       </article>
       <AuthorityDecisionPanel selectedZone={selectedZone} forecast={forecast} authorityAction={authorityAction} />
-      <DataTable title="Αναφορές πολιτών" rows={sightings} type="sighting" />
-      <DataTable title="Ποσότητες ανά λιμάνι" rows={catches} type="catch" />
+      <DataTable title={t("Αναφορές πολιτών", "Citizen reports")} rows={sightings} type="sighting" />
+      <DataTable title={t("Ποσότητες ανά λιμάνι", "Quantities by port")} rows={catches} type="catch" />
     </section>
   );
 }
 
 function AuthorityDecisionPanel({ selectedZone, forecast, authorityAction }) {
+  const { t, lang } = useLang();
+  const en = lang === "en";
+  const title = en && authorityAction.titleEn ? authorityAction.titleEn : authorityAction.title;
+  const reason = en && authorityAction.reasonEn ? authorityAction.reasonEn : authorityAction.reason;
+  const publicMessage = en && authorityAction.publicMessageEn ? authorityAction.publicMessageEn : authorityAction.publicMessage;
+  const protocol = en && authorityAction.protocolEn ? authorityAction.protocolEn : authorityAction.protocol;
   return (
     <article className="info-panel wide decision-panel">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">Authority copilot</p>
-          <h3>Προτεινόμενη επιχειρησιακή απόφαση</h3>
+          <p className="eyebrow">{t("Authority copilot", "Authority copilot")}</p>
+          <h3>{t("Προτεινόμενη επιχειρησιακή απόφαση", "Recommended operational decision")}</h3>
         </div>
         <Megaphone size={22} aria-hidden="true" />
       </div>
       <div className="decision-layout">
         <div>
-          <span className={`action-level ${authorityAction.level}`}>{authorityAction.title}</span>
-          <p>{authorityAction.reason}</p>
+          <span className={`action-level ${authorityAction.level}`}>{title}</span>
+          <p>{reason}</p>
           <div className="alert-draft">
-            <strong>Κείμενο ειδοποίησης</strong>
+            <strong>{t("Κείμενο ειδοποίησης", "Alert text")}</strong>
             <p>
-              Προσοχή: {authorityAction.publicMessage} Περιοχή: {selectedZone.area}. Πρόβλεψη 72h:
-              {" "}{forecast[2].score}/100. Μην αγγίζετε και μην καταναλώνετε άγνωστα ψάρια.
+              {t(
+                `Προσοχή: ${publicMessage} Περιοχή: ${selectedZone.area}. Πρόβλεψη 72h: ${forecast[2].score}/100. Μην αγγίζετε και μην καταναλώνετε άγνωστα ψάρια.`,
+                `Warning: ${publicMessage} Area: ${selectedZone.area}. 72h forecast: ${forecast[2].score}/100. Do not touch or eat unfamiliar fish.`
+              )}
             </p>
           </div>
         </div>
         <div className="protocol-list">
-          {authorityAction.protocol.map((step) => (
+          {protocol.map((step) => (
             <div key={step}>
               <CheckCircle2 size={17} aria-hidden="true" />
               <span>{step}</span>
@@ -2394,13 +2443,14 @@ function AuthorityDecisionPanel({ selectedZone, forecast, authorityAction }) {
 }
 
 function AdminPanel({ sightings, updateSighting, pendingSightings, verifiedSightings }) {
+  const { t } = useLang();
   return (
     <section className="panel-grid">
       <article className="info-panel wide">
         <div className="panel-heading">
           <div>
             <p className="eyebrow">Admin panel</p>
-            <h2>Έλεγχος αναφορών και φωτογραφιών</h2>
+            <h2>{t("Έλεγχος αναφορών και φωτογραφιών", "Review of reports and photos")}</h2>
           </div>
           <ShieldCheck size={24} aria-hidden="true" />
         </div>
@@ -2412,17 +2462,17 @@ function AdminPanel({ sightings, updateSighting, pendingSightings, verifiedSight
       </article>
       <article className="info-panel wide">
         <div className="table-header">
-          <h3>Ουρά ελέγχου</h3>
+          <h3>{t("Ουρά ελέγχου", "Review queue")}</h3>
         </div>
         <div className="responsive-table">
           <table>
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Περιοχή</th>
+                <th>{t("Περιοχή", "Area")}</th>
                 <th>AI</th>
-                <th>Κατάσταση</th>
-                <th>Ενέργειες</th>
+                <th>{t("Κατάσταση", "Status")}</th>
+                <th>{t("Ενέργειες", "Actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -2434,10 +2484,10 @@ function AdminPanel({ sightings, updateSighting, pendingSightings, verifiedSight
                   <td><StatusBadge status={item.status} /></td>
                   <td>
                     <div className="row-actions">
-                      <button type="button" className="icon-action approve" title="Έγκριση" onClick={() => updateSighting(item.id, "verified")}>
+                      <button type="button" className="icon-action approve" title={t("Έγκριση", "Approve")} onClick={() => updateSighting(item.id, "verified")}>
                         <CheckCircle2 size={17} aria-hidden="true" />
                       </button>
-                      <button type="button" className="icon-action reject" title="Απόρριψη" onClick={() => updateSighting(item.id, "rejected")}>
+                      <button type="button" className="icon-action reject" title={t("Απόρριψη", "Reject")} onClick={() => updateSighting(item.id, "rejected")}>
                         <XCircle size={17} aria-hidden="true" />
                       </button>
                     </div>
@@ -2453,6 +2503,7 @@ function AdminPanel({ sightings, updateSighting, pendingSightings, verifiedSight
 }
 
 function DataTable({ title, rows, type }) {
+  const { t, lang } = useLang();
   return (
     <article className="info-panel wide">
       <div className="table-header">
@@ -2464,20 +2515,20 @@ function DataTable({ title, rows, type }) {
             {type === "catch" ? (
               <tr>
                 <th>ID</th>
-                <th>Σκάφος</th>
-                <th>Λιμάνι</th>
-                <th>Κιλά</th>
-                <th>Περιοχή</th>
-                <th>Κατάσταση</th>
+                <th>{t("Σκάφος", "Vessel")}</th>
+                <th>{t("Λιμάνι", "Port")}</th>
+                <th>{t("Κιλά", "Kg")}</th>
+                <th>{t("Περιοχή", "Area")}</th>
+                <th>{t("Κατάσταση", "Status")}</th>
               </tr>
             ) : (
               <tr>
                 <th>ID</th>
-                <th>Περιοχή</th>
-                <th>Πηγή</th>
+                <th>{t("Περιοχή", "Area")}</th>
+                <th>{t("Πηγή", "Source")}</th>
                 <th>AI</th>
-                <th>Δάγκωμα</th>
-                <th>Κατάσταση</th>
+                <th>{t("Δάγκωμα", "Bite")}</th>
+                <th>{t("Κατάσταση", "Status")}</th>
               </tr>
             )}
           </thead>
@@ -2490,15 +2541,15 @@ function DataTable({ title, rows, type }) {
                   <td>{item.port}</td>
                   <td>{item.kg} kg</td>
                   <td>{item.area}</td>
-                  <td>{item.status}</td>
+                  <td>{catchStatusLabel(item.status, lang)}</td>
                 </tr>
               ) : (
                 <tr key={item.id}>
                   <td>{item.id}</td>
                   <td>{item.area}</td>
-                  <td>{item.source}</td>
+                  <td>{sourceLabel(item.source, lang)}</td>
                   <td>{item.ai}%</td>
-                  <td>{item.bite}</td>
+                  <td>{biteLabel(item.bite, lang)}</td>
                   <td><StatusBadge status={item.status} /></td>
                 </tr>
               )
@@ -2511,7 +2562,8 @@ function DataTable({ title, rows, type }) {
 }
 
 function StatusBadge({ status }) {
-  return <span className={`status-badge ${status}`}>{statusLabel(status)}</span>;
+  const { lang } = useLang();
+  return <span className={`status-badge ${status}`}>{statusLabel(status, lang)}</span>;
 }
 
 function nearestZone(coords) {
@@ -2592,13 +2644,22 @@ function buildAuthorityAction(zone, forecast) {
     return {
       level: "critical",
       title: "Έκδοση άμεσης προειδοποίησης",
+      titleEn: "Issue an immediate warning",
       publicMessage: "αυξημένη πιθανότητα παρουσίας λαγοκέφαλου και ανάγκη άμεσης προσοχής.",
+      publicMessageEn: "increased likelihood of pufferfish presence and a need for immediate caution.",
       reason: "Το σύστημα συνδυάζει υψηλό risk score, επιβεβαιωμένες αναφορές και σοβαρούς δείκτες συμβάντων.",
+      reasonEn: "The system combines a high risk score, confirmed reports and serious incident indicators.",
       protocol: [
         "Ενημέρωση ναυαγοσωστών και λιμενικών αρχών",
         "Ανάρτηση προειδοποίησης σε ακτές και ψηφιακά κανάλια",
         "Επικοινωνία με αλιευτικούς συλλόγους",
         "Ενεργοποίηση καθημερινής αναφοράς φορέα"
+      ],
+      protocolEn: [
+        "Notify lifeguards and coast-guard authorities",
+        "Post a warning on beaches and digital channels",
+        "Contact fishing associations",
+        "Activate a daily authority report"
       ]
     };
   }
@@ -2606,26 +2667,44 @@ function buildAuthorityAction(zone, forecast) {
     return {
       level: "high",
       title: "Αυξημένη επιτήρηση περιοχής",
+      titleEn: "Increased area surveillance",
       publicMessage: "αυξημένη πιθανότητα παρουσίας λαγοκέφαλου στην ευρύτερη περιοχή.",
+      publicMessageEn: "increased likelihood of pufferfish presence in the wider area.",
       reason: "Η πρόβλεψη 72h δείχνει αυξητική τάση και χρειάζεται στενότερη παρακολούθηση.",
+      reasonEn: "The 72h forecast shows a rising trend and closer monitoring is needed.",
       protocol: [
         "Στοχευμένη ενημέρωση παραλιών",
         "Έλεγχος νέων φωτογραφιών από admin",
         "Συγκέντρωση δηλώσεων αλιέων",
         "Επανυπολογισμός risk score ανά 6 ώρες"
+      ],
+      protocolEn: [
+        "Targeted beach updates",
+        "Admin review of new photos",
+        "Collect fishermen declarations",
+        "Recalculate risk score every 6 hours"
       ]
     };
   }
   return {
     level: "normal",
     title: "Συνέχιση παρακολούθησης",
+    titleEn: "Continue monitoring",
     publicMessage: "χαμηλή έως μέτρια πιθανότητα, με σύσταση προσοχής.",
+    publicMessageEn: "low to moderate likelihood, with a recommendation for caution.",
     reason: "Τα δορυφορικά και επιβεβαιωμένα δεδομένα δεν δείχνουν άμεση ανάγκη συναγερμού.",
+    reasonEn: "Satellite and confirmed data do not indicate an immediate need for an alert.",
     protocol: [
       "Διατήρηση κανονικής επιτήρησης",
       "Έλεγχος νέων αναφορών πολιτών",
       "Εβδομαδιαία σύνοψη φορέα",
       "Προληπτική ενημέρωση όταν αυξηθεί το score"
+    ],
+    protocolEn: [
+      "Maintain normal surveillance",
+      "Review new citizen reports",
+      "Weekly authority summary",
+      "Preventive update when the score rises"
     ]
   };
 }
@@ -2643,10 +2722,45 @@ function estimateImageProbability(fileName = "", condition = "", bite = "") {
   return Math.max(51, Math.min(96, score + Math.floor(Math.random() * 12)));
 }
 
-function statusLabel(status) {
+function statusLabel(status, lang = "el") {
+  if (lang === "en") {
+    if (status === "verified") return "confirmed";
+    if (status === "rejected") return "rejected";
+    return "under review";
+  }
   if (status === "verified") return "επιβεβαιώθηκε";
   if (status === "rejected") return "απορρίφθηκε";
   return "σε έλεγχο";
+}
+
+// Κατάσταση δήλωσης αλίευσης (Greek data values) → δίγλωσσο label
+function catchStatusLabel(status, lang = "el") {
+  if (lang !== "en") return status;
+  const map = {
+    "δηλώθηκε": "declared",
+    "ελέγχεται": "under review",
+    "εγκρίθηκε": "approved",
+  };
+  return map[status] || status;
+}
+
+// Πηγή αναφοράς (Greek data values) → δίγλωσσο label
+function sourceLabel(source, lang = "el") {
+  if (lang !== "en") return source;
+  const map = {
+    "Πολίτης": "Citizen",
+    "Λουόμενος": "Swimmer",
+    "Ψαράς": "Fisherman",
+  };
+  return map[source] || source;
+}
+
+// Δάγκωμα Ναι/Όχι → δίγλωσσο label
+function biteLabel(bite, lang = "el") {
+  if (lang !== "en") return bite;
+  if (bite === "Ναι") return "Yes";
+  if (bite === "Όχι") return "No";
+  return bite;
 }
 
 function toCsv(rows) {
