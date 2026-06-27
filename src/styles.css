@@ -2098,3 +2098,139 @@ td {
 .qr-actions { display: flex; justify-content: center; margin-bottom: 12px; }
 .qr-actions .primary-action { width: 100%; justify-content: center; }
 .qr-hint { margin: 0 !important; font-size: 0.78rem !important; color: #8aa0a8 !important; }
+
+/* ============================================================
+   ΠΡΟΣΒΑΣΙΜΟΤΗΤΑ: μέγεθος γραμμάτων, υψηλή αντίθεση, read-aloud, verdict
+   ============================================================ */
+:root { --ui-scale: 1; }
+html { font-size: calc(100% * var(--ui-scale)); }
+
+/* --- A11y control bar (topbar) --- */
+.a11y-bar { display: inline-flex; align-items: center; gap: 6px; }
+.a11y-scale { display: inline-flex; align-items: center; gap: 4px; padding-left: 4px; }
+.a11y-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 9px; border-radius: 9px; font-size: 0.78rem; font-weight: 800;
+  color: #0b3d4d; background: rgba(255,255,255,0.85);
+  border: 1.5px solid rgba(11,61,77,0.22); cursor: pointer; transition: all 0.15s;
+}
+.a11y-btn.icon { min-width: 34px; justify-content: center; font-size: 0.95rem; }
+.a11y-btn:hover { background: #fff; border-color: var(--sea); }
+.a11y-btn.on { background: #0b3d4d; color: #ffe27a; border-color: #0b3d4d; }
+.a11y-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* --- Read-aloud button --- */
+.read-aloud {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 800;
+  color: #0b3d4d; background: #e7f4f7; border: 1.5px solid rgba(11,61,77,0.18);
+  cursor: pointer; transition: all 0.15s;
+}
+.read-aloud:hover { background: #d4ecf1; }
+.read-aloud.speaking { background: #0b3d4d; color: #bdf5ff; border-color: #0b3d4d; }
+.read-aloud.compact { margin-top: 10px; }
+
+/* --- Safety verdict (Κολύμπι / Φαγητό) --- */
+.safety-verdict {
+  display: grid; gap: 8px; margin: 4px 0 14px;
+  padding: 12px; border-radius: 14px; background: var(--panel-soft);
+  border: 1px solid var(--line);
+}
+.verdict-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 11px; border-radius: 11px; }
+.verdict-row svg { flex: 0 0 auto; margin-top: 1px; }
+.verdict-row strong { display: block; font-size: 0.92rem; font-weight: 850; }
+.verdict-row span { display: block; font-size: 0.82rem; line-height: 1.4; opacity: 0.9; margin-top: 2px; }
+.verdict-row.ok { background: rgba(47,166,106,0.12); color: #155f3a; }
+.verdict-row.warn { background: rgba(214,138,20,0.14); color: #7a4a08; }
+.verdict-row.high { background: rgba(216,66,66,0.13); color: #8a1f1f; }
+.verdict-row.danger { background: rgba(192,32,42,0.12); color: #7d141b; border: 1.5px solid rgba(192,32,42,0.35); }
+
+/* ============================================================
+   HIGH-CONTRAST THEME (χαμηλή όραση: κίτρινο σε μαύρο)
+   ============================================================ */
+:root[data-contrast="on"] {
+  --ink: #ffffff;
+  --muted: #ffe27a;
+  --line: #ffd000;
+  --panel: #0a0a0a;
+  --panel-soft: #181818;
+  --sea: #ffd000;
+  --sea-dark: #000000;
+  --aqua: #5fe0ff;
+  --shadow: 0 0 0 2px #ffd000;
+  color-scheme: dark;
+  background: #000 !important;
+}
+:root[data-contrast="on"] body { background: #000 !important; }
+:root[data-contrast="on"] .app-shell { background: #000; }
+:root[data-contrast="on"] .sidebar { background: #000 !important; color: #fff; border-right: 2px solid #ffd000; }
+:root[data-contrast="on"] .brand-mark { background: #ffd000; color: #000; }
+:root[data-contrast="on"] .info-panel,
+:root[data-contrast="on"] .zone-panel,
+:root[data-contrast="on"] .search-result-card,
+:root[data-contrast="on"] .form-panel,
+:root[data-contrast="on"] .ops-zone-card,
+:root[data-contrast="on"] .ops-alert-row,
+:root[data-contrast="on"] .ops-status-zone,
+:root[data-contrast="on"] .my-beach-card,
+:root[data-contrast="on"] .area-search-panel,
+:root[data-contrast="on"] .live-bar,
+:root[data-contrast="on"] .qr-card,
+:root[data-contrast="on"] .safety-verdict {
+  background: #0a0a0a !important; color: #fff !important; border: 1.5px solid #ffd000 !important;
+  box-shadow: none !important;
+}
+:root[data-contrast="on"] h1,
+:root[data-contrast="on"] h2,
+:root[data-contrast="on"] h3,
+:root[data-contrast="on"] p,
+:root[data-contrast="on"] dt,
+:root[data-contrast="on"] dd,
+:root[data-contrast="on"] li,
+:root[data-contrast="on"] strong,
+:root[data-contrast="on"] small,
+:root[data-contrast="on"] label { color: #fff !important; }
+:root[data-contrast="on"] .eyebrow,
+:root[data-contrast="on"] .panel-heading span,
+:root[data-contrast="on"] .timeline-sub,
+:root[data-contrast="on"] dt { color: #ffe27a !important; }
+:root[data-contrast="on"] input,
+:root[data-contrast="on"] textarea,
+:root[data-contrast="on"] select {
+  background: #000 !important; color: #fff !important; border: 1.5px solid #ffd000 !important;
+}
+:root[data-contrast="on"] input::placeholder,
+:root[data-contrast="on"] textarea::placeholder { color: #c9c08a !important; }
+:root[data-contrast="on"] .secondary-action,
+:root[data-contrast="on"] .a11y-btn,
+:root[data-contrast="on"] .read-aloud,
+:root[data-contrast="on"] .lang-toggle button,
+:root[data-contrast="on"] .follow-star {
+  background: #000 !important; color: #ffd000 !important; border: 1.5px solid #ffd000 !important;
+}
+:root[data-contrast="on"] .primary-action,
+:root[data-contrast="on"] .a11y-btn.on,
+:root[data-contrast="on"] .lang-toggle button.on,
+:root[data-contrast="on"] .read-aloud.speaking {
+  background: #ffd000 !important; color: #000 !important; border: 1.5px solid #ffd000 !important;
+}
+:root[data-contrast="on"] .verdict-row.ok { background: #07240f !important; color: #7CFFB0 !important; }
+:root[data-contrast="on"] .verdict-row.warn { background: #2a1d00 !important; color: #ffcf5a !important; }
+:root[data-contrast="on"] .verdict-row.high,
+:root[data-contrast="on"] .verdict-row.danger { background: #2a0606 !important; color: #ff8a8a !important; border-color: #ff5a5a !important; }
+:root[data-contrast="on"] .verdict-row strong,
+:root[data-contrast="on"] .verdict-row span { color: inherit !important; }
+/* Παχιά κίτρινα focus rings σε όλη την εφαρμογή για πληκτρολόγιο */
+:root[data-contrast="on"] a:focus-visible,
+:root[data-contrast="on"] button:focus-visible,
+:root[data-contrast="on"] input:focus-visible,
+:root[data-contrast="on"] textarea:focus-visible,
+:root[data-contrast="on"] select:focus-visible,
+:root[data-contrast="on"] [tabindex]:focus-visible {
+  outline: 3px solid #ffd000 !important; outline-offset: 2px !important;
+}
+
+@media (max-width: 640px) {
+  .a11y-bar { flex-wrap: wrap; }
+  .a11y-btn span { display: none; }
+}

@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
+    "build:pages": "vite build --base=/sea-guard-ai/",
+    "deploy": "npm run build:pages && gh-pages -d dist -t -b gh-pages -m \"deploy\" && npm run build",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {

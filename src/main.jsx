@@ -7,8 +7,14 @@ import {
   Anchor,
   Activity,
   BadgeCheck,
+  Ban,
   BarChart3,
   Bell,
+  Contrast,
+  Info,
+  Type,
+  Volume2,
+  VolumeX,
   ChevronUp,
   ChevronDown,
   BrainCircuit,
@@ -54,10 +60,12 @@ import {
   countPointsNear,
   computeLiveZone,
   geocodeGreece,
+  riskInk,
 } from "./data/seaData.js";
 import { BASE_ZONES, AREA_ALIASES } from "./data/zones.js";
 import GreeceGlobe from "./components/GreeceGlobe.jsx";
 import { LangProvider, useLang } from "./lang.jsx";
+import { A11yProvider, useA11y } from "./a11y.jsx";
 
 const riskZones = BASE_ZONES.map((z) => ({
   risk: 38,
@@ -741,6 +749,7 @@ function App() {
               <button type="button" className={lang === "el" ? "on" : ""} onClick={() => setLang("el")} aria-pressed={lang === "el"}>ΕΛ</button>
               <button type="button" className={lang === "en" ? "on" : ""} onClick={() => setLang("en")} aria-pressed={lang === "en"}>EN</button>
             </div>
+            <AccessibilityBar />
             <button type="button" className="primary-action" onClick={locateUser}>
               <LocateFixed size={18} aria-hidden="true" />
               {t("Δες την περιοχή μου", "See my area")}
@@ -922,7 +931,7 @@ function App() {
                 <p className="eyebrow">{t("Περιοχή", "Area")}</p>
                 <h2>{selectedZone.area}</h2>
               </div>
-              <span className="risk-pill" style={{ backgroundColor: selectedZone.color }}>
+              <span className="risk-pill" style={{ backgroundColor: selectedZone.color, color: riskInk(selectedZone.color) }}>
                 {lvl(selectedZone)}
               </span>
             </div>
@@ -937,6 +946,7 @@ function App() {
               <span>{selectedZone.risk}</span>
               <small>/100</small>
             </div>
+            <SafetyVerdict zone={selectedZone} />
             <dl className="zone-facts">
               <div>
                 <dt>{t("Δορυφορικές συνθήκες", "Satellite conditions")}</dt>
@@ -1411,6 +1421,104 @@ function QrButton({ zone }) {
   );
 }
 
+function AccessibilityBar() {
+  const { t } = useLang();
+  const { contrast, toggleContrast, bumpScale, scale } = useA11y();
+  return (
+    <div className="a11y-bar" role="group" aria-label={t("Προσβασιμότητα", "Accessibility")}>
+      <button
+        type="button"
+        className={`a11y-btn ${contrast ? "on" : ""}`}
+        onClick={toggleContrast}
+        aria-pressed={contrast}
+        title={t("Υψηλή αντίθεση (χαμηλή όραση)", "High contrast (low vision)")}
+      >
+        <Contrast size={16} aria-hidden="true" />
+        <span>{t("Αντίθεση", "Contrast")}</span>
+      </button>
+      <div className="a11y-scale" role="group" aria-label={t("Μέγεθος γραμμάτων", "Text size")}>
+        <Type size={15} aria-hidden="true" />
+        <button type="button" className="a11y-btn icon" onClick={() => bumpScale(-1)} disabled={scale <= 1} aria-label={t("Μικρότερα γράμματα", "Smaller text")}>Α−</button>
+        <button type="button" className="a11y-btn icon" onClick={() => bumpScale(1)} disabled={scale >= 1.3} aria-label={t("Μεγαλύτερα γράμματα", "Larger text")}>Α+</button>
+      </div>
+    </div>
+  );
+}
+
+function ReadAloudButton({ text, compact }) {
+  const { t, lang } = useLang();
+  const { speak, stopSpeak, speaking } = useA11y();
+  return (
+    <button
+      type="button"
+      className={`read-aloud ${compact ? "compact" : ""} ${speaking ? "speaking" : ""}`}
+      onClick={() => (speaking ? stopSpeak() : speak(text, lang))}
+      aria-label={speaking ? t("Σταμάτα", "Stop") : t("Διάβασέ μου", "Read aloud")}
+    >
+      {speaking ? <VolumeX size={16} aria-hidden="true" /> : <Volume2 size={16} aria-hidden="true" />}
+      <span>{speaking ? t("Σταμάτα", "Stop") : t("Διάβασέ μου", "Read aloud")}</span>
+    </button>
+  );
+}
+
+function swimVerdict(risk, t) {
+  if (risk >= 66)
+    return {
+      tone: "high",
+      label: t("Αυξημένη παρουσία", "High presence"),
+      text: t("Προσοχή στα ρηχά και στο ψάρεμα. Μην αγγίζεις ποτέ λαγοκέφαλο — δαγκώνει δυνατά.", "Take care in shallows and when fishing. Never touch a pufferfish — it bites hard."),
+    };
+  if (risk >= 48)
+    return {
+      tone: "warn",
+      label: t("Μέτρια προσοχή", "Moderate caution"),
+      text: t("Το κολύμπι είναι κανονικό. Προσοχή αν ψαρεύεις ή πατάς κοντά στον βυθό.", "Swimming is fine. Take care if you fish or step near the seabed."),
+    };
+  if (risk >= 30)
+    return {
+      tone: "warn",
+      label: t("Χαμηλός-μέτριος", "Low-moderate"),
+      text: t("Το κολύμπι είναι κανονικό. Απλή επαγρύπνηση.", "Swimming is fine. Just stay aware."),
+    };
+  return {
+    tone: "ok",
+    label: t("Χαμηλός κίνδυνος", "Low risk"),
+    text: t("Το κολύμπι είναι κανονικό στην περιοχή.", "Swimming is fine in this area."),
+  };
+}
+
+function SafetyVerdict({ zone }) {
+  const { t, lang } = useLang();
+  if (!zone || zone.risk == null) return null;
+  const sv = swimVerdict(zone.risk, t);
+  const SwimIcon = sv.tone === "ok" ? ShieldCheck : sv.tone === "high" ? AlertTriangle : Info;
+  const eatStrong = t("ΠΟΤΕ", "NEVER");
+  const eatText = t("Θανατηφόρα τοξίνη (τετροδοτοξίνη). Μην το τρως ούτε μαγειρεμένο.", "Lethal toxin (tetrodotoxin). Do not eat it, even cooked.");
+  const spoken =
+    lang === "en"
+      ? `Swim: ${sv.label}. ${sv.text} Eat: never. ${eatText}`
+      : `Κολύμπι: ${sv.label}. ${sv.text} Φαγητό: ποτέ. ${eatText}`;
+  return (
+    <div className="safety-verdict">
+      <div className={`verdict-row swim ${sv.tone}`}>
+        <SwimIcon size={20} aria-hidden="true" />
+        <div>
+          <strong>{t("Κολύμπι", "Swim")}: {sv.label}</strong>
+          <span>{sv.text}</span>
+        </div>
+      </div>
+      <div className="verdict-row eat danger">
+        <Ban size={20} aria-hidden="true" />
+        <div>
+          <strong>{t("Φαγητό", "Eat")}: {eatStrong}</strong>
+          <span>{eatText}</span>
+        </div>
+      </div>
+      <ReadAloudButton text={spoken} compact />
+    </div>
+  );
+}
+
 function FollowStar({ active, onClick }) {
   const { t } = useLang();
   return (
@@ -1456,7 +1564,7 @@ function MyBeaches({ zones, onSelect, onRemove }) {
           >
             {z.confirmed && <span className="confirmed-dot" aria-hidden="true" />}
             <span className="my-beach-name">{z.area}</span>
-            <span className="my-beach-risk" style={{ background: z.color }}>{z.risk}</span>
+            <span className="my-beach-risk" style={{ background: z.color, color: riskInk(z.color) }}>{z.risk}</span>
             <span
               className="my-beach-x"
               role="button"
@@ -1815,6 +1923,7 @@ function AreaSearchPanel({
               <dd>{peakForecast}/100</dd>
             </div>
           </dl>
+          <SafetyVerdict zone={selectedZone} />
           <p>{lang === "en" && selectedZone.recommendationEn ? selectedZone.recommendationEn : selectedZone.recommendation}</p>
         </div>
         <div className="result-actions">
@@ -2915,7 +3024,7 @@ function AuthorityMonitor({ zones, realPoints, sightings, onExit, onRefresh }) {
               <div key={z.id} className="ops-zone-card" style={{ borderColor: z.color }}>
                 <div className="ops-zone-top">
                   <span className="ops-zone-name">{z.area}</span>
-                  <span className="ops-zone-risk" style={{ background: z.color }}>{z.risk}</span>
+                  <span className="ops-zone-risk" style={{ background: z.color, color: riskInk(z.color) }}>{z.risk}</span>
                 </div>
                 <div className="ops-zone-facts">
                   <span>{z.sst != null ? `${z.sst.toFixed(1)}°C` : "—"}</span>
@@ -3398,6 +3507,8 @@ function escapeHtml(value) {
 
 createRoot(document.getElementById("root")).render(
   <LangProvider>
-    <App />
+    <A11yProvider>
+      <App />
+    </A11yProvider>
   </LangProvider>
 );

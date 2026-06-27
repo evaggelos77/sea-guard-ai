@@ -52,6 +52,28 @@ function communitySignal(localReports, localKg, bites) {
   return Math.max(b, 0.6 * r + 0.4 * k);
 }
 
+// Επιστρέφει αναγνώσιμο χρώμα κειμένου (σχεδόν μαύρο ή λευκό) για ένα χρώμα φόντου κινδύνου,
+// επιλέγοντας αυτό με τη μεγαλύτερη αντίθεση (WCAG). Λύνει τα λευκά-σε-κίτρινο που δεν διαβάζονταν.
+export function riskInk(hex) {
+  try {
+    const c = String(hex).replace("#", "");
+    if (c.length < 6) return "#0b1f25";
+    const toLin = (v) => {
+      const s = v / 255;
+      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+    const r = toLin(parseInt(c.slice(0, 2), 16));
+    const g = toLin(parseInt(c.slice(2, 4), 16));
+    const b = toLin(parseInt(c.slice(4, 6), 16));
+    const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    const cWhite = 1.05 / (L + 0.05);
+    const cBlack = (L + 0.05) / 0.05;
+    return cBlack >= cWhite ? "#0b1f25" : "#ffffff";
+  } catch {
+    return "#ffffff";
+  }
+}
+
 export function classifyRisk(score) {
   if (score >= 82) return { level: "Πολύ υψηλό", color: "#c0202a", tone: "danger" };
   if (score >= 66) return { level: "Υψηλό", color: "#e73d3d", tone: "danger" };
