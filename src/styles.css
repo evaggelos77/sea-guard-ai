@@ -2042,3 +2042,17 @@ td {
 .timeline-range { flex: 1; min-width: 160px; accent-color: #7fd4ff; height: 4px; }
 .timeline-year { font-family: var(--font-head); font-weight: 900; font-size: 1.4rem; color: #fff; min-width: 56px; text-align: center; font-variant-numeric: tabular-nums; }
 .timeline-count { font-size: 0.82rem; color: #9cc0e4; font-weight: 700; }
+
+/* ====================== Κάρτα αναγνώρισης λαγοκέφαλου (recognition) ====================== */
+.recognition-card { background: linear-gradient(135deg, rgba(207,224,168,0.18), var(--panel)); }
+.recognition-body { display: grid; grid-template-columns: 200px 1fr; gap: 18px; align-items: center; }
+.recognition-fish { width: 200px; height: auto; }
+.recognition-list { margin: 0; padding-left: 18px; }
+.recognition-list li { font-size: 0.9rem; color: var(--ink); margin-bottom: 6px; line-height: 1.35; }
+.recognition-list b { color: var(--sea-dark); }
+.recognition-warn {
+  display: flex; align-items: center; gap: 8px; margin: 14px 0 0; padding: 10px 12px;
+  border-radius: 10px; font-size: 0.86rem; font-weight: 700; color: #8a1f1f;
+  background: rgba(216,66,66,0.08); border: 1px solid rgba(216,66,66,0.3);
+}
+@media (max-width: 560px) { .recognition-body { grid-template-columns: 1fr; justify-items: center; } }

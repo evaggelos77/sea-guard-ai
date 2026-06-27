@@ -375,6 +375,36 @@ function App() {
     };
   }, [loadLiveData]);
 
+  // Deep-link: ?zone=<id> ή ?q=<περιοχή> ή ?lang=el|en → άνοιγμα κατευθείαν στη σωστή παραλία
+  const pendingSearchRef = useRef(null);
+  const deepLinkRef = useRef(false);
+  useEffect(() => {
+    if (deepLinkRef.current) return;
+    deepLinkRef.current = true;
+    try {
+      const p = new URLSearchParams(window.location.search);
+      const ln = p.get("lang");
+      if (ln === "en" || ln === "el") setLang(ln);
+      const z = p.get("zone");
+      const q = p.get("q");
+      if (z && riskZones.some((rz) => rz.id === z)) {
+        setSelectedZoneId(z);
+        setActivePanel("map");
+      } else if (q) {
+        setAreaQuery(q);
+        pendingSearchRef.current = q;
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (liveStatus === "ready" && pendingSearchRef.current) {
+      pendingSearchRef.current = null;
+      handleAreaSearch();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveStatus]);
+
   // Συγχώνευση: base ζώνη + ζωντανός υπολογισμός κινδύνου (ανανεώνεται και με νέες αναφορές)
   const liveZones = useMemo(() => {
     return riskZones.map((zone) => {
@@ -499,7 +529,7 @@ function App() {
   }
 
   async function handleAreaSearch(event) {
-    event.preventDefault();
+    event?.preventDefault?.();
     const q = areaQuery.trim();
     if (!q) return;
     const match = findAreaZone(q);
@@ -1283,7 +1313,9 @@ function ShareButton({ zone }) {
   const { t, lang } = useLang();
   const [copied, setCopied] = useState(false);
   const share = async () => {
-    const url = "https://evaggelos77.github.io/sea-guard-ai/";
+    const baseUrl = "https://evaggelos77.github.io/sea-guard-ai/";
+    const param = zone.id === "__search" ? `q=${encodeURIComponent(zone.area)}` : `zone=${zone.id}`;
+    const url = `${baseUrl}?${param}&lang=${lang}`;
     const text =
       lang === "en"
         ? `🐡 ${zone.area}: pufferfish risk ${zone.risk}/100. Check it live:`
@@ -2247,6 +2279,47 @@ function HomePanel() {
           {t(
             "Χωροκατακτητικό λεσσεψιανό είδος που έχει εξαπλωθεί στις ελληνικές θάλασσες. Δαγκώνει δίχτυα, παραγάδια και ψάρια, και είναι επικίνδυνα δηλητηριώδης για τον άνθρωπο λόγω τετροδοτοξίνης. Η εφαρμογή συνδυάζει πραγματική θερμοκρασία θάλασσας (SST), πραγματικές καταγραφές του είδους (GBIF) και αναφορές πολιτών/αλιέων για να δείχνει περιοχές αυξημένης πιθανότητας παρουσίας.",
             "An invasive Lessepsian species that has spread across the Greek seas. It bites nets, long-lines and fish, and is dangerously poisonous to humans due to tetrodotoxin. The app combines real sea-surface temperature (SST), real species records (GBIF) and citizen/fisherman reports to show areas of higher likelihood of presence."
+          )}
+        </p>
+      </article>
+      <article className="info-panel wide recognition-card">
+        <div className="panel-heading">
+          <div>
+            <p className="eyebrow">{t("Αναγνώριση", "Identification")}</p>
+            <h3>{t("Πώς να αναγνωρίσεις τον λαγοκέφαλο", "How to recognize the pufferfish")}</h3>
+          </div>
+          <Fish size={24} aria-hidden="true" />
+        </div>
+        <div className="recognition-body">
+          <svg className="recognition-fish" viewBox="0 0 200 120" aria-hidden="true">
+            <ellipse cx="95" cy="60" rx="62" ry="38" fill="#cfe0a8" stroke="#7a8a52" strokeWidth="2.5" />
+            <path d="M157 60 L192 34 L186 60 L192 86 Z" fill="#cfe0a8" stroke="#7a8a52" strokeWidth="2.5" />
+            <circle cx="62" cy="48" r="7" fill="#1b2b1b" />
+            <circle cx="60" cy="46" r="2.4" fill="#fff" />
+            <path d="M33 62 q-9 -7 -2 -14 M33 62 q-9 7 -2 14" fill="none" stroke="#1b2b1b" strokeWidth="3" strokeLinecap="round" />
+            {[78, 100, 122, 78, 100, 122].map((cx, i) => (
+              <circle key={i} cx={cx} cy={i < 3 ? 44 : 72} r="4.5" fill="#7a8a52" opacity="0.75" />
+            ))}
+            <g stroke="#9aa86a" strokeWidth="2.2" strokeLinecap="round">
+              {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => {
+                const a = (n / 8) * Math.PI * 2;
+                return <line key={n} x1={95 + Math.cos(a) * 40} y1={60 + Math.sin(a) * 26} x2={95 + Math.cos(a) * 52} y2={60 + Math.sin(a) * 34} />;
+              })}
+            </g>
+          </svg>
+          <ul className="recognition-list">
+            <li><b>{t("Ασημί-γκρι σώμα", "Silver-grey body")}</b> · {t("λευκή κοιλιά", "white belly")}</li>
+            <li><b>{t("Μεγάλα δόντια σαν ράμφος", "Large beak-like teeth")}</b> {t("(4 δόντια)", "(4 teeth)")}</li>
+            <li>{t("Φουσκώνει σαν μπάλα όταν απειλείται", "Inflates like a ball when threatened")}</li>
+            <li>{t("Σκούρες κηλίδες στην πλάτη", "Dark spots on the back")}</li>
+            <li>{t("Μήκος έως 1 μέτρο", "Up to 1 metre long")}</li>
+          </ul>
+        </div>
+        <p className="recognition-warn">
+          <AlertTriangle size={16} aria-hidden="true" />
+          {t(
+            "Αν δεις ψάρι με αυτά τα χαρακτηριστικά: ΜΗΝ το αγγίξεις, ΜΗΝ το φας — φωτογράφισε από απόσταση & ανέφερέ το.",
+            "If you see a fish with these traits: DON'T touch it, DON'T eat it — photograph from a distance & report it.",
           )}
         </p>
       </article>
