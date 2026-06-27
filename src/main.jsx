@@ -1066,10 +1066,16 @@ function App() {
               "Digital marine-protection infrastructure for the pufferfish. Real data: Open-Meteo Marine + GBIF. Not a substitute for official information — in an emergency call 112."
             )}
           </p>
-          <button type="button" className="footer-about-link" onClick={() => goToPanel("about")}>
-            <Database size={15} aria-hidden="true" />
-            {t("Πηγές & Μεθοδολογία", "Sources & Methodology")}
-          </button>
+          <div className="footer-links">
+            <button type="button" className="footer-about-link" onClick={() => goToPanel("about")}>
+              <Database size={15} aria-hidden="true" />
+              {t("Πηγές & Μεθοδολογία", "Sources & Methodology")}
+            </button>
+            <a className="footer-about-link support" href={STRIPE_SUPPORT_URL} target="_blank" rel="noopener noreferrer">
+              <Star size={15} aria-hidden="true" fill="currentColor" />
+              {t("Στήριξε με €0,99", "Support €0.99")}
+            </a>
+          </div>
           <p className="ev-footer-copy">© {new Date().getFullYear()} EV LABS AI — {t("Όλα τα δικαιώματα κατοχυρωμένα.", "All rights reserved.")}</p>
         </footer>
       </main>
@@ -2661,6 +2667,30 @@ function InstallGuide() {
   );
 }
 
+const STRIPE_SUPPORT_URL = "https://buy.stripe.com/eVqdRb0v1aP96YVarj1gs09";
+
+function SupportCard() {
+  const { t } = useLang();
+  return (
+    <article className="info-panel wide support-card">
+      <div className="support-inner">
+        <div className="support-copy">
+          <p className="eyebrow">{t("Στήριξε την εφαρμογή", "Support this app")}</p>
+          <h3>{t("Κράτα το EV SEA GUARD AI ζωντανό & δωρεάν", "Keep EV SEA GUARD AI alive & free")}</h3>
+          <p>{t(
+            "Η εφαρμογή είναι δωρεάν για όλους. Με μια μικρή στήριξη €0,99 βοηθάς να συνεχίσει, να μένει ενημερωμένη και να βελτιώνεται.",
+            "The app is free for everyone. A small €0.99 contribution helps it keep running, stay updated and improve."
+          )}</p>
+        </div>
+        <a className="support-btn" href={STRIPE_SUPPORT_URL} target="_blank" rel="noopener noreferrer">
+          <Star size={18} aria-hidden="true" fill="currentColor" />
+          {t("Στήριξε με €0,99", "Support with €0.99")}
+        </a>
+      </div>
+    </article>
+  );
+}
+
 function HomePanel() {
   const { t } = useLang();
   const safety = [
@@ -2679,6 +2709,7 @@ function HomePanel() {
   return (
     <section className="panel-grid">
       <InstallGuide />
+      <SupportCard />
       <article className="info-panel wide danger-banner">
         <div className="panel-heading">
           <div>

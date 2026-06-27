@@ -2330,3 +2330,30 @@ html { font-size: calc(100% * var(--ui-scale)); }
   position: absolute; inset: 0; width: 100%; height: 100%;
   pointer-events: none; z-index: 500; overflow: visible;
 }
+
+/* Κάρτα στήριξης €0,99 (Stripe Payment Link) */
+.support-card {
+  background: linear-gradient(135deg, rgba(45,181,201,0.10), rgba(17,94,115,0.07));
+  border: 1.5px solid rgba(45,181,201,0.32);
+}
+.support-inner {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+}
+.support-copy { flex: 1 1 280px; }
+.support-copy h3 { margin: 2px 0 6px; font-family: "Commissioner", sans-serif; color: #0b3d4d; font-size: 1.12rem; }
+.support-copy p { margin: 0; font-size: 0.9rem; line-height: 1.5; color: #43616b; }
+.support-btn {
+  display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto;
+  padding: 12px 20px; border-radius: 999px; font-size: 0.95rem; font-weight: 800;
+  color: #04313b; background: linear-gradient(135deg, #5fe0c2, #2db5c9);
+  text-decoration: none; border: none; box-shadow: 0 8px 20px rgba(45,181,201,0.32);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.support-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(45,181,201,0.42); }
+.footer-links { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.footer-about-link.support { color: #bdf5ff; text-decoration: none; }
+:root[data-contrast="on"] .support-card { background: #0a0a0a !important; border-color: #ffd000 !important; }
+:root[data-contrast="on"] .support-copy h3,
+:root[data-contrast="on"] .support-copy p { color: #fff !important; }
+:root[data-contrast="on"] .support-btn { background: #ffd000 !important; color: #000 !important; box-shadow: none !important; }
+@media (max-width: 560px) { .support-inner { flex-direction: column; align-items: stretch; } .support-btn { justify-content: center; } }
