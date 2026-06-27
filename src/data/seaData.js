@@ -248,7 +248,9 @@ export function computeLiveZone({ marine, occ, localReports = 0, localKg = 0, bi
     occTotal: occ?.total ?? 0,
     occRecent: occ?.recent ?? 0,
     satellite: marine?.sst != null ? describeSst(marine.sst) : "Δεδομένα μη διαθέσιμα",
+    satelliteEn: marine?.sst != null ? describeSstEn(marine.sst) : "Data unavailable",
     recommendation: recommend(risk),
+    recommendationEn: recommendEn(risk),
     breakdown: {
       sst: sSst == null ? null : Math.round(sSst * 100),
       occurrence: Math.round(sOcc * 100),
@@ -281,4 +283,20 @@ function recommend(risk) {
   if (risk >= 48) return "Αυξημένη πιθανότητα παρουσίας. Προληπτική ενημέρωση και παρακολούθηση.";
   if (risk >= 30) return "Μέτρια πιθανότητα. Συνεχίζεται η παρακολούθηση.";
   return "Χαμηλή πιθανότητα παρουσίας αυτή την περίοδο. Συνεχής επιτήρηση.";
+}
+
+function recommendEn(risk) {
+  if (risk >= 82) return "Alert swimmers, children, pets and fishermen. A public notice is recommended.";
+  if (risk >= 66) return "Caution for swimmers and fishermen. Do not touch unfamiliar fish.";
+  if (risk >= 48) return "Elevated likelihood of presence. Preventive awareness and monitoring.";
+  if (risk >= 30) return "Moderate likelihood. Monitoring continues.";
+  return "Low likelihood of presence this period. Ongoing surveillance.";
+}
+
+function describeSstEn(t) {
+  if (t >= 26) return `SST ${t.toFixed(1)}°C — very favourable conditions`;
+  if (t >= 22) return `SST ${t.toFixed(1)}°C — favourable conditions`;
+  if (t >= 18) return `SST ${t.toFixed(1)}°C — mildly favourable`;
+  if (t >= 15) return `SST ${t.toFixed(1)}°C — marginal conditions`;
+  return `SST ${t.toFixed(1)}°C — unfavourable`;
 }

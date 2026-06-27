@@ -51,6 +51,7 @@ import {
 } from "./data/seaData.js";
 import { BASE_ZONES, AREA_ALIASES } from "./data/zones.js";
 import GreeceGlobe from "./components/GreeceGlobe.jsx";
+import { LangProvider, useLang } from "./lang.jsx";
 
 const riskZones = BASE_ZONES.map((z) => ({
   risk: 38,
@@ -199,15 +200,16 @@ const aiModels = [
 ];
 
 const roles = [
-  { id: "citizen", label: "Πολίτης / λουόμενος", icon: Users },
-  { id: "fisherman", label: "Ψαράς", icon: Anchor },
-  { id: "authority", label: "Δήμος / Περιφέρεια", icon: BarChart3 },
-  { id: "admin", label: "Admin", icon: ShieldCheck }
+  { id: "citizen", label: "Πολίτης / λουόμενος", labelEn: "Citizen / swimmer", icon: Users },
+  { id: "fisherman", label: "Ψαράς", labelEn: "Fisherman", icon: Anchor },
+  { id: "authority", label: "Δήμος / Περιφέρεια", labelEn: "Municipality / Region", icon: BarChart3 },
+  { id: "admin", label: "Admin", labelEn: "Admin", icon: ShieldCheck }
 ];
 
 const areaAliases = AREA_ALIASES;
 
 function App() {
+  const { lang, setLang, t } = useLang();
   const [role, setRole] = useState("citizen");
   const [selectedZoneId, setSelectedZoneId] = useState("rhodes");
   const [sightings, setSightings] = useState(initialSightings);
@@ -324,6 +326,13 @@ function App() {
   );
 
   const selectedZone = displayZones.find((zone) => zone.id === selectedZoneId) || displayZones[0];
+  // Επίπεδο κινδύνου δίγλωσσο (EN από το risk score, EL από το έτοιμο label)
+  const lvl = (z) => {
+    if (lang === "el") return z.level;
+    if (!z.live) return "Loading…";
+    const r = z.risk;
+    return r >= 82 ? "Critical" : r >= 66 ? "High" : r >= 48 ? "Moderate-high" : r >= 30 ? "Moderate" : "Low";
+  };
   const verifiedSightings = sightings.filter((item) => item.status === "verified");
   const pendingSightings = sightings.filter((item) => item.status === "pending");
   const totalKg = catches.reduce((sum, item) => sum + Number(item.kg || 0), 0);
@@ -539,11 +548,11 @@ function App() {
           </div>
           <div>
             <strong>EV SEA GUARD AI</strong>
-            <span>Θαλάσσια προστασία</span>
+            <span>{t("Θαλάσσια προστασία", "Marine protection")}</span>
           </div>
         </div>
 
-        <div className="role-stack" aria-label="Επιλογή ρόλου">
+        <div className="role-stack" aria-label={t("Επιλογή ρόλου", "Choose role")}>
           {roles.map((item) => {
             const Icon = item.icon;
             return (
@@ -554,18 +563,18 @@ function App() {
                 onClick={() => selectRole(item.id)}
               >
                 <Icon size={18} aria-hidden="true" />
-                <span>{item.label}</span>
+                <span>{lang === "en" ? item.labelEn : item.label}</span>
               </button>
             );
           })}
         </div>
 
-        <nav className="section-nav" aria-label="Ενότητες">
-          <NavButton icon={Home} label="Αρχική" active={activePanel === "home"} onClick={() => goToPanel("home")} />
-          <NavButton icon={MapPin} label="Χάρτης" active={activePanel === "map"} onClick={() => goToPanel("map")} />
-          <NavButton icon={Camera} label="Αναφορά" active={activePanel === "report"} onClick={() => goToPanel("report")} />
-          <NavButton icon={Anchor} label="Ψαράς" active={activePanel === "fisherman"} onClick={() => goToPanel("fisherman")} />
-          <NavButton icon={BarChart3} label="Φορέας" active={activePanel === "authority"} onClick={() => goToPanel("authority")} />
+        <nav className="section-nav" aria-label={t("Ενότητες", "Sections")}>
+          <NavButton icon={Home} label={t("Αρχική", "Home")} active={activePanel === "home"} onClick={() => goToPanel("home")} />
+          <NavButton icon={MapPin} label={t("Χάρτης", "Map")} active={activePanel === "map"} onClick={() => goToPanel("map")} />
+          <NavButton icon={Camera} label={t("Αναφορά", "Report")} active={activePanel === "report"} onClick={() => goToPanel("report")} />
+          <NavButton icon={Anchor} label={t("Ψαράς", "Fisherman")} active={activePanel === "fisherman"} onClick={() => goToPanel("fisherman")} />
+          <NavButton icon={BarChart3} label={t("Φορέας", "Authority")} active={activePanel === "authority"} onClick={() => goToPanel("authority")} />
           <NavButton icon={ShieldCheck} label="Admin" active={activePanel === "admin"} onClick={() => goToPanel("admin")} />
         </nav>
 
@@ -581,18 +590,22 @@ function App() {
           <div className="topbar-title">
             <BrandLogo3D />
             <div>
-              <p className="eyebrow">Πρωτότυπο λειτουργικής πλατφόρμας</p>
-              <h1>Δες τι συμβαίνει σήμερα στη θάλασσα γύρω σου.</h1>
+              <p className="eyebrow">{t("Ζωντανός χάρτης κινδύνου · EV LABS AI", "Live risk map · EV LABS AI")}</p>
+              <h1>{t("Δες τι συμβαίνει σήμερα στη θάλασσα γύρω σου.", "See what's happening in the sea around you today.")}</h1>
             </div>
           </div>
           <div className="topbar-actions">
+            <div className="lang-toggle" role="group" aria-label="Language">
+              <button type="button" className={lang === "el" ? "on" : ""} onClick={() => setLang("el")} aria-pressed={lang === "el"}>ΕΛ</button>
+              <button type="button" className={lang === "en" ? "on" : ""} onClick={() => setLang("en")} aria-pressed={lang === "en"}>EN</button>
+            </div>
             <button type="button" className="primary-action" onClick={locateUser}>
               <LocateFixed size={18} aria-hidden="true" />
-              Δες την περιοχή μου
+              {t("Δες την περιοχή μου", "See my area")}
             </button>
             <button type="button" className="secondary-action" onClick={() => setActivePanel("report")}>
               <Upload size={18} aria-hidden="true" />
-              Αναφορά λαγοκέφαλου
+              {t("Αναφορά λαγοκέφαλου", "Report a pufferfish")}
             </button>
           </div>
         </header>
@@ -636,30 +649,32 @@ function App() {
 
         <IntelligenceStrip forecast={forecast} selectedZone={selectedZone} />
 
-        <section className="metrics-grid" aria-label="Σύνοψη κινδύνου">
+        <section className="metrics-grid" aria-label={t("Σύνοψη κινδύνου", "Risk summary")}>
           <Metric icon={Gauge} label="Risk Score" value={`${selectedZone.risk}/100`} tone={selectedZone.risk >= 80 ? "danger" : "warn"} />
           <Metric
             icon={Waves}
-            label="Θερμοκρασία SST"
+            label={t("Θερμοκρασία SST", "Sea temp (SST)")}
             value={selectedZone.sst != null ? `${selectedZone.sst.toFixed(1)}°C` : "—"}
             tone={selectedZone.sst != null && selectedZone.sst >= 24 ? "danger" : "default"}
           />
-          <Metric icon={TrendingUp} label="Πρόβλεψη 72h" value={`${forecast[2].score}/100`} tone={forecast[2].score >= 80 ? "danger" : "warn"} />
-          <Metric icon={BrainCircuit} label="AI Confidence" value={`${forecast.confidence}%`} />
+          <Metric icon={TrendingUp} label={t("Πρόβλεψη 72h", "72h forecast")} value={`${forecast[2].score}/100`} tone={forecast[2].score >= 80 ? "danger" : "warn"} />
+          <Metric icon={BrainCircuit} label={t("Κάλυψη δεδομένων", "Data coverage")} value={`${forecast.confidence}%`} />
         </section>
 
         <div className="workspace-grid">
-          <section className="map-panel" aria-label="Χάρτης Ελλάδας με ζώνες κινδύνου">
+          <section className="map-panel" aria-label={t("Χάρτης Ελλάδας με ζώνες κινδύνου", "Greece map with risk zones")}>
             <div className="panel-heading">
               <div>
-                <p className="eyebrow">Χάρτης Ελλάδας · ζωντανά δεδομένα</p>
-                <h2>Ζώνες κινδύνου λαγοκέφαλου</h2>
+                <p className="eyebrow">{t("Χάρτης Ελλάδας · ζωντανά δεδομένα", "Greece map · live data")}</p>
+                <h2>{t("Ζώνες κινδύνου λαγοκέφαλου", "Pufferfish risk zones")}</h2>
               </div>
               <RiskLegend />
             </div>
             <p className="map-source-note">
-              <span className="gbif-dot" aria-hidden="true" /> Γαλάζιες κουκκίδες = πραγματικές
-              καταγραφές GBIF ({realPoints.length}). Κύκλοι = ζώνες με ζωντανό Risk Score.
+              <span className="gbif-dot" aria-hidden="true" /> {t(
+                `Γαλάζιες κουκκίδες = πραγματικές καταγραφές GBIF (${realPoints.length}). Κύκλοι = ζώνες με ζωντανό Risk Score.`,
+                `Blue dots = real GBIF records (${realPoints.length}). Circles = zones with a live Risk Score.`
+              )}
             </p>
 
             <MapContainer center={[38.1, 24.1]} zoom={6} scrollWheelZoom={false} className="risk-map">
@@ -676,7 +691,7 @@ function App() {
                   pathOptions={{ color: "#7fe3ff", fillColor: "#7fe3ff", fillOpacity: 0.6, weight: 0 }}
                 >
                   <Popup>
-                    Πραγματική καταγραφή GBIF
+                    {t("Πραγματική καταγραφή GBIF", "Real GBIF record")}
                     <br />
                     Lagocephalus sceleratus{pt.year ? ` · ${pt.year}` : ""}
                   </Popup>
@@ -698,7 +713,7 @@ function App() {
                   <Popup>
                     <strong>{zone.area}</strong>
                     <br />
-                    Risk Score: {zone.risk}/100 · {zone.level}
+                    Risk Score: {zone.risk}/100 · {lvl(zone)}
                     {zone.sst != null && (
                       <>
                         <br />
@@ -708,7 +723,7 @@ function App() {
                     {zone.occRecent != null && (
                       <>
                         <br />
-                        Καταγραφές GBIF (3ετία): {zone.occRecent}
+                        {t("Καταγραφές GBIF (3ετία)", "GBIF records (3y)")}: {zone.occRecent}
                       </>
                     )}
                   </Popup>
@@ -720,20 +735,20 @@ function App() {
                   radius={8}
                   pathOptions={{ color: "#ffffff", fillColor: "#225c73", fillOpacity: 0.85, weight: 3 }}
                 >
-                  <Popup>Η θέση σου</Popup>
+                  <Popup>{t("Η θέση σου", "Your location")}</Popup>
                 </CircleMarker>
               )}
             </MapContainer>
           </section>
 
-          <aside className="zone-panel" aria-label="Κάρτα περιοχής">
+          <aside className="zone-panel" aria-label={t("Κάρτα περιοχής", "Area card")}>
             <div className="zone-head">
               <div>
-                <p className="eyebrow">Περιοχή</p>
+                <p className="eyebrow">{t("Περιοχή", "Area")}</p>
                 <h2>{selectedZone.area}</h2>
               </div>
               <span className="risk-pill" style={{ backgroundColor: selectedZone.color }}>
-                {selectedZone.level}
+                {lvl(selectedZone)}
               </span>
             </div>
             <div className="risk-score">
@@ -742,30 +757,26 @@ function App() {
             </div>
             <dl className="zone-facts">
               <div>
-                <dt>Τελευταίες αναφορές</dt>
-                <dd>{selectedZone.reports48h} τις τελευταίες 48 ώρες</dd>
+                <dt>{t("Δορυφορικές συνθήκες", "Satellite conditions")}</dt>
+                <dd>{lang === "en" && selectedZone.satelliteEn ? selectedZone.satelliteEn : selectedZone.satellite}</dd>
               </div>
               <div>
-                <dt>Δορυφορικές συνθήκες</dt>
-                <dd>{selectedZone.satellite}</dd>
+                <dt>{t("Καταγραφές 3ετίας", "Records (3y)")}</dt>
+                <dd>{selectedZone.occRecent != null ? selectedZone.occRecent : "—"}</dd>
               </div>
               <div>
-                <dt>Τελευταία αναφορά</dt>
-                <dd>{selectedZone.lastReport}</dd>
-              </div>
-              <div>
-                <dt>Σύσταση</dt>
-                <dd>{selectedZone.recommendation}</dd>
+                <dt>{t("Σύσταση", "Recommendation")}</dt>
+                <dd>{lang === "en" && selectedZone.recommendationEn ? selectedZone.recommendationEn : selectedZone.recommendation}</dd>
               </div>
             </dl>
             <div className="zone-actions">
               <button type="button" className="primary-action" onClick={() => setActivePanel("report")}>
                 <Camera size={18} aria-hidden="true" />
-                Κάνε αναφορά
+                {t("Κάνε αναφορά", "Report")}
               </button>
               <button type="button" className="secondary-action" onClick={() => setActivePanel("home")}>
                 <ShieldCheck size={18} aria-hidden="true" />
-                Οδηγίες
+                {t("Οδηγίες", "Safety")}
               </button>
             </div>
           </aside>
@@ -802,17 +813,20 @@ function App() {
             <Waves size={18} aria-hidden="true" />
             <div>
               <strong>EV SEA GUARD AI</strong>
-              <span>Μια δημιουργία της <b>EV LABS AI</b> · evlabsai.gr</span>
+              <span>{t("Μια δημιουργία της", "Created by")} <b>EV LABS AI</b> · evlabsai.gr</span>
             </div>
           </div>
           <p className="ev-footer-note">
-            Ψηφιακή υποδομή θαλάσσιας προστασίας για τον λαγοκέφαλο. Πραγματικά δεδομένα: Open-Meteo Marine + GBIF.
-            Δεν αντικαθιστά την επίσημη ενημέρωση — σε επείγον καλέστε 112.
+            {t(
+              "Ψηφιακή υποδομή θαλάσσιας προστασίας για τον λαγοκέφαλο. Πραγματικά δεδομένα: Open-Meteo Marine + GBIF. Δεν αντικαθιστά την επίσημη ενημέρωση — σε επείγον καλέστε 112.",
+              "Digital marine-protection infrastructure for the pufferfish. Real data: Open-Meteo Marine + GBIF. Not a substitute for official information — in an emergency call 112."
+            )}
           </p>
-          <p className="ev-footer-copy">© {new Date().getFullYear()} EV LABS AI — Όλα τα δικαιώματα κατοχυρωμένα.</p>
+          <p className="ev-footer-copy">© {new Date().getFullYear()} EV LABS AI — {t("Όλα τα δικαιώματα κατοχυρωμένα.", "All rights reserved.")}</p>
         </footer>
       </main>
       <ScrollDots />
+      <SosButton />
     </div>
   );
 }
@@ -895,6 +909,31 @@ function ScrollDots() {
         <ChevronDown size={16} />
       </button>
     </nav>
+  );
+}
+
+function SosButton() {
+  const { t } = useLang();
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={`sos-fab ${open ? "open" : ""}`}>
+      {open && (
+        <div className="sos-menu" role="menu">
+          <a href="tel:112" className="sos-line"><Siren size={15} aria-hidden="true" /> 112 · {t("Έκτακτη ανάγκη", "Emergency")}</a>
+          <a href="tel:166" className="sos-line">166 · {t("ΕΚΑΒ", "Ambulance")}</a>
+          <a href="tel:108" className="sos-line">108 · {t("Λιμενικό", "Coast Guard")}</a>
+        </div>
+      )}
+      <button
+        type="button"
+        className="sos-toggle"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-label={t("Τηλέφωνα έκτακτης ανάγκης", "Emergency phone numbers")}
+      >
+        <Siren size={19} aria-hidden="true" /> SOS
+      </button>
+    </div>
   );
 }
 
@@ -1153,13 +1192,20 @@ function AreaSearchPanel({
   onReport,
   onSafety
 }) {
+  const { t, lang } = useLang();
   const peakForecast = Math.max(...forecast.map((item) => item.score));
+  const lvl = (z) => {
+    if (lang === "el") return z.level;
+    if (!z.live) return "Loading…";
+    const r = z.risk;
+    return r >= 82 ? "Critical" : r >= 66 ? "High" : r >= 48 ? "Moderate-high" : r >= 30 ? "Moderate" : "Low";
+  };
 
   return (
-    <section className="area-search-panel" aria-label="Αναζήτηση περιοχής">
+    <section className="area-search-panel" aria-label={t("Αναζήτηση περιοχής", "Search area")}>
       <div className="area-search-copy">
-        <p className="eyebrow">Γρήγορη αναζήτηση</p>
-        <h2>Γράψε την περιοχή που βρίσκεσαι και δες καθαρό αποτέλεσμα.</h2>
+        <p className="eyebrow">{t("Γρήγορη αναζήτηση", "Quick search")}</p>
+        <h2>{t("Γράψε την περιοχή που βρίσκεσαι και δες καθαρό αποτέλεσμα.", "Type your area and get a clear result.")}</h2>
       </div>
 
       <form className="area-search-form" onSubmit={onSearch}>
@@ -1168,13 +1214,13 @@ function AreaSearchPanel({
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="π.χ. Ρόδος, Κως, Ηράκλειο, Χαλκιδική"
-            aria-label="Περιοχή ή παραλία"
+            placeholder={t("π.χ. Ρόδος, Κως, Ηράκλειο, Χαλκιδική", "e.g. Rhodes, Kos, Crete, Santorini")}
+            aria-label={t("Περιοχή ή παραλία", "Area or beach")}
           />
         </label>
         <button type="submit" className="primary-action">
           <Target size={18} aria-hidden="true" />
-          Δες αποτελέσματα
+          {t("Δες αποτελέσματα", "Search")}
         </button>
         <button type="button" className="secondary-action" onClick={onLocate}>
           <LocateFixed size={18} aria-hidden="true" />
@@ -1182,7 +1228,7 @@ function AreaSearchPanel({
         </button>
       </form>
 
-      <div className="quick-area-grid" aria-label="Γρήγορη επιλογή δημοφιλών περιοχών">
+      <div className="quick-area-grid" aria-label={t("Γρήγορη επιλογή δημοφιλών περιοχών", "Popular areas")}>
         {zones
           .filter((zone) => zone.popular || zone.id === selectedZone.id)
           .map((zone) => (
@@ -1206,32 +1252,32 @@ function AreaSearchPanel({
           <small>/100</small>
         </div>
         <div className="result-details">
-          <p className="eyebrow">Αποτέλεσμα περιοχής</p>
+          <p className="eyebrow">{t("Αποτέλεσμα περιοχής", "Area result")}</p>
           <h3>{selectedZone.area}</h3>
           <dl>
             <div>
-              <dt>Επίπεδο</dt>
-              <dd>{selectedZone.level}</dd>
+              <dt>{t("Επίπεδο", "Level")}</dt>
+              <dd>{lvl(selectedZone)}</dd>
             </div>
             <div>
-              <dt>48h αναφορές</dt>
-              <dd>{selectedZone.reports48h}</dd>
+              <dt>{t("Θερμοκρασία", "Temperature")}</dt>
+              <dd>{selectedZone.sst != null ? `${selectedZone.sst.toFixed(1)}°C` : "—"}</dd>
             </div>
             <div>
-              <dt>Πρόβλεψη 72h</dt>
+              <dt>{t("Πρόβλεψη 72h", "72h forecast")}</dt>
               <dd>{peakForecast}/100</dd>
             </div>
           </dl>
-          <p>{selectedZone.recommendation}</p>
+          <p>{lang === "en" && selectedZone.recommendationEn ? selectedZone.recommendationEn : selectedZone.recommendation}</p>
         </div>
         <div className="result-actions">
           <button type="button" className="primary-action" onClick={onReport}>
             <Camera size={18} aria-hidden="true" />
-            Κάνε αναφορά
+            {t("Κάνε αναφορά", "Report")}
           </button>
           <button type="button" className="secondary-action" onClick={onSafety}>
             <ShieldCheck size={18} aria-hidden="true" />
-            Οδηγίες
+            {t("Οδηγίες", "Safety")}
           </button>
         </div>
       </div>
@@ -1653,17 +1699,18 @@ function RiskLegend() {
 }
 
 function HomePanel() {
+  const { t } = useLang();
   const safety = [
-    "Μην αγγίζεις και μην πιάνεις λαγοκέφαλο — έχει δυνατά δόντια και δαγκώνει.",
-    "ΜΗΝ τον τρως ποτέ. Περιέχει τετροδοτοξίνη, θανατηφόρα τοξίνη που δεν καταστρέφεται με μαγείρεμα.",
-    "Κράτησε παιδιά και κατοικίδια μακριά από νεκρά ψάρια στην ακτή.",
-    "Φωτογράφισε από απόσταση και στείλε αναφορά με GPS μέσα από την εφαρμογή."
+    t("Μην αγγίζεις και μην πιάνεις λαγοκέφαλο — έχει δυνατά δόντια και δαγκώνει.", "Do not touch or handle a pufferfish — it has strong teeth and bites."),
+    t("ΜΗΝ τον τρως ποτέ. Περιέχει τετροδοτοξίνη, θανατηφόρα τοξίνη που δεν καταστρέφεται με μαγείρεμα.", "NEVER eat it. It contains tetrodotoxin, a deadly toxin that cooking does not destroy."),
+    t("Κράτησε παιδιά και κατοικίδια μακριά από νεκρά ψάρια στην ακτή.", "Keep children and pets away from dead fish on the shore."),
+    t("Φωτογράφισε από απόσταση και στείλε αναφορά με GPS μέσα από την εφαρμογή.", "Photograph from a distance and send a GPS report through the app."),
   ];
   const firstAid = [
-    "Σε δάγκωμα: ξέπλυνε με καθαρό νερό, σταμάτησε την αιμορραγία με πίεση.",
-    "Σε κατάποση ή ύποπτα συμπτώματα (μούδιασμα χειλιών, ναυτία, δυσκολία αναπνοής): κάλεσε ΑΜΕΣΩΣ το 112 / ΕΚΑΒ 166.",
-    "Η τετροδοτοξίνη δρα γρήγορα — μη χάνεις χρόνο, ζήτησε ιατρική βοήθεια.",
-    "Αλιείς: μη ρίχνετε τον λαγοκέφαλο πίσω στη θάλασσα ζωντανό."
+    t("Σε δάγκωμα: ξέπλυνε με καθαρό νερό, σταμάτησε την αιμορραγία με πίεση.", "If bitten: rinse with clean water, stop bleeding with pressure."),
+    t("Σε κατάποση ή ύποπτα συμπτώματα (μούδιασμα χειλιών, ναυτία, δυσκολία αναπνοής): κάλεσε ΑΜΕΣΩΣ το 112 / ΕΚΑΒ 166.", "If swallowed or with symptoms (lip numbness, nausea, trouble breathing): call 112 / EKAB 166 IMMEDIATELY."),
+    t("Η τετροδοτοξίνη δρα γρήγορα — μη χάνεις χρόνο, ζήτησε ιατρική βοήθεια.", "Tetrodotoxin acts fast — don't lose time, seek medical help."),
+    t("Αλιείς: μη ρίχνετε τον λαγοκέφαλο πίσω στη θάλασσα ζωντανό.", "Fishermen: do not throw pufferfish back into the sea alive."),
   ];
 
   return (
@@ -1671,21 +1718,20 @@ function HomePanel() {
       <article className="info-panel wide danger-banner">
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">Προσοχή — δηλητηριώδες είδος</p>
-            <h2>Λαγοκέφαλος (Lagocephalus sceleratus)</h2>
+            <p className="eyebrow">{t("Προσοχή — δηλητηριώδες είδος", "Warning — poisonous species")}</p>
+            <h2>{t("Λαγοκέφαλος", "Pufferfish")} (Lagocephalus sceleratus)</h2>
           </div>
           <AlertTriangle size={24} aria-hidden="true" />
         </div>
         <p>
-          Χωροκατακτητικό λεσσεψιανό είδος που έχει εξαπλωθεί στις ελληνικές θάλασσες.
-          Δαγκώνει δίχτυα, παραγάδια και ψάρια, και είναι <strong>επικίνδυνα δηλητηριώδης</strong> για
-          τον άνθρωπο λόγω τετροδοτοξίνης. Η εφαρμογή συνδυάζει <strong>πραγματική θερμοκρασία
-          θάλασσας (SST)</strong>, <strong>πραγματικές καταγραφές του είδους (GBIF)</strong> και
-          αναφορές πολιτών/αλιέων για να δείχνει περιοχές αυξημένης πιθανότητας παρουσίας.
+          {t(
+            "Χωροκατακτητικό λεσσεψιανό είδος που έχει εξαπλωθεί στις ελληνικές θάλασσες. Δαγκώνει δίχτυα, παραγάδια και ψάρια, και είναι επικίνδυνα δηλητηριώδης για τον άνθρωπο λόγω τετροδοτοξίνης. Η εφαρμογή συνδυάζει πραγματική θερμοκρασία θάλασσας (SST), πραγματικές καταγραφές του είδους (GBIF) και αναφορές πολιτών/αλιέων για να δείχνει περιοχές αυξημένης πιθανότητας παρουσίας.",
+            "An invasive Lessepsian species that has spread across the Greek seas. It bites nets, long-lines and fish, and is dangerously poisonous to humans due to tetrodotoxin. The app combines real sea-surface temperature (SST), real species records (GBIF) and citizen/fisherman reports to show areas of higher likelihood of presence."
+          )}
         </p>
       </article>
       <article className="info-panel">
-        <h3>Οδηγίες ασφάλειας</h3>
+        <h3>{t("Οδηγίες ασφάλειας", "Safety guidance")}</h3>
         <ul className="check-list">
           {safety.map((item) => (
             <li key={item}>
@@ -1696,7 +1742,7 @@ function HomePanel() {
         </ul>
       </article>
       <article className="info-panel">
-        <h3>Πρώτες βοήθειες & έκτακτη ανάγκη</h3>
+        <h3>{t("Πρώτες βοήθειες & έκτακτη ανάγκη", "First aid & emergency")}</h3>
         <ul className="check-list">
           {firstAid.map((item) => (
             <li key={item}>
@@ -1707,32 +1753,31 @@ function HomePanel() {
         </ul>
         <div className="notice-line">
           <Megaphone size={18} aria-hidden="true" />
-          Έκτακτη ανάγκη: <strong>112</strong> · ΕΚΑΒ <strong>166</strong> · Λιμενικό <strong>108</strong>
+          {t("Έκτακτη ανάγκη", "Emergency")}: <strong>112</strong> · {t("ΕΚΑΒ", "Ambulance")} <strong>166</strong> · {t("Λιμενικό", "Coast Guard")} <strong>108</strong>
         </div>
       </article>
       <article className="info-panel">
-        <h3>Πηγές δεδομένων</h3>
-        <p className="source-caption">Ζωντανές, ενεργές τώρα:</p>
+        <h3>{t("Πηγές δεδομένων", "Data sources")}</h3>
+        <p className="source-caption">{t("Ζωντανές, ενεργές τώρα:", "Live, active now:")}</p>
         <div className="source-list">
-          <span className="source-live">Open-Meteo Marine (SST/ρεύματα)</span>
-          <span className="source-live">GBIF (καταγραφές είδους)</span>
+          <span className="source-live">Open-Meteo Marine ({t("SST/ρεύματα", "SST/currents")})</span>
+          <span className="source-live">GBIF ({t("καταγραφές είδους", "species records")})</span>
         </div>
-        <p className="source-caption">Υπό ενσωμάτωση (επόμενη φάση):</p>
+        <p className="source-caption">{t("Υπό ενσωμάτωση (επόμενη φάση):", "Being integrated (next phase):")}</p>
         <div className="source-list">
           <span>Copernicus Marine</span>
           <span>EMODnet Bathymetry</span>
-          <span>ELNAIS / ΕΛΚΕΘΕ</span>
+          <span>ELNAIS / HCMR</span>
           <span>iSea</span>
         </div>
       </article>
-      <article className="info-panel wide">
-        <h3>AI υποσυστήματα πλατφόρμας</h3>
-        <div className="ai-system-grid">
-          <AiSystem title="Satellite Fusion AI" detail="Συνδυάζει SST, ρεύματα, χλωροφύλλη, θολερότητα και βάθος." />
-          <AiSystem title="Vision Recognition" detail="Εντοπίζει χαρακτηριστικά λαγοκέφαλου από φωτογραφίες." />
-          <AiSystem title="Hotspot Predictor" detail="Προβλέπει περιοχές αυξημένης πιθανότητας για τις επόμενες ώρες." />
-          <AiSystem title="Duplicate Guard" detail="Μειώνει διπλές ή ύποπτες αναφορές με χωροχρονικό έλεγχο." />
-          <AiSystem title="Authority Copilot" detail="Παράγει σύνοψη, ανακοίνωση, PDF και επιχειρησιακή αναφορά." />
+      <article className="info-panel wide disclaimer-panel">
+        <div className="notice-line">
+          <ShieldCheck size={18} aria-hidden="true" />
+          {t(
+            "Ενημερωτικό εργαλείο — εκτιμήσεις βάσει δεδομένων, ΟΧΙ ιατρική ή επίσημη οδηγία και ΟΧΙ υποκατάστατο του 112. Ακολουθήστε πάντα τις επίσημες αρχές.",
+            "Informational tool — data-based estimates, NOT medical or official guidance and NOT a substitute for 112. Always follow official authorities."
+          )}
         </div>
       </article>
     </section>
@@ -2422,4 +2467,8 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;");
 }
 
-createRoot(document.getElementById("root")).render(<App />);
+createRoot(document.getElementById("root")).render(
+  <LangProvider>
+    <App />
+  </LangProvider>
+);

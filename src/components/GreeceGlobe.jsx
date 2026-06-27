@@ -3,6 +3,7 @@ import { geoOrthographic, geoPath, geoGraticule10, geoDistance, geoInterpolate }
 import { Fish, Waves, AlertTriangle, Plus, Minus, RotateCcw, Satellite, BrainCircuit, Activity, Radar } from "lucide-react";
 import medmap from "../data/medmap.json";
 import { INVASION_FLOWS, INVASION_ENTRY } from "../data/migration.js";
+import { useLang } from "../lang.jsx";
 
 const W = 520;
 const H = 460;
@@ -16,11 +17,11 @@ const clampN = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 // Κατηγορίες κινδύνου (παλέτα Αιγαίου)
 function riskNode(risk) {
-  if (risk >= 82) return { color: "#E03A4E", on: "#fff", label: "Κρίσιμος" };
-  if (risk >= 66) return { color: "#F07A2E", on: "#2a1400", label: "Υψηλός" };
-  if (risk >= 48) return { color: "#F2C744", on: "#3a2c00", label: "Μέτριος" };
-  if (risk >= 30) return { color: "#5FB37A", on: "#04231c", label: "Χαμηλός-μέτριος" };
-  return { color: "#36C5A8", on: "#04231c", label: "Χαμηλός" };
+  if (risk >= 82) return { color: "#E03A4E", on: "#fff", label: "Κρίσιμος", labelEn: "Critical" };
+  if (risk >= 66) return { color: "#F07A2E", on: "#2a1400", label: "Υψηλός", labelEn: "High" };
+  if (risk >= 48) return { color: "#F2C744", on: "#3a2c00", label: "Μέτριος", labelEn: "Moderate" };
+  if (risk >= 30) return { color: "#5FB37A", on: "#04231c", label: "Χαμηλός-μέτριος", labelEn: "Low-moderate" };
+  return { color: "#36C5A8", on: "#04231c", label: "Χαμηλός", labelEn: "Low" };
 }
 
 const greeceFeature = medmap.features.find((f) => f.name === "Greece");
@@ -29,6 +30,8 @@ const contextFeatures = medmap.features.filter((f) => f.name !== "Greece");
 const lerp = (a, b, k) => a + (b - a) * k;
 
 export default function GreeceGlobe({ zones = [], selectedZone, onSelectZone, realPoints = [] }) {
+  const { lang, t } = useLang();
+  const rl = (rn) => (lang === "en" ? rn.labelEn : rn.label); // risk level label
   const [view, setView] = useState({ rot: ROT, scale: BASE }); // controlled focus — όχι free drag
   const [hoverId, setHoverId] = useState(null);
   const [showGbif, setShowGbif] = useState(true);
@@ -164,24 +167,26 @@ export default function GreeceGlobe({ zones = [], selectedZone, onSelectZone, re
     projectedZones[0];
 
   return (
-    <section className="invasion-map" aria-label="Χάρτης εισβολής λαγοκέφαλου">
-      <a href="#im-side-content" className="sr-only sr-skip">Μετάβαση στις λεπτομέρειες κινδύνου</a>
+    <section className="invasion-map" aria-label={t("Χάρτης εισβολής λαγοκέφαλου", "Pufferfish invasion map")}>
+      <a href="#im-side-content" className="sr-only sr-skip">{t("Μετάβαση στις λεπτομέρειες κινδύνου", "Skip to risk details")}</a>
       <p id="globe-help" className="sr-only">
-        Χρησιμοποίησε το Tab για να μετακινηθείς στις ζώνες κινδύνου και Enter για επιλογή.
-        Ο χάρτης είναι σταθερός· χρησιμοποίησε τα κουμπιά + και − για μεγέθυνση.
+        {t(
+          "Χρησιμοποίησε το Tab για να μετακινηθείς στις ζώνες κινδύνου και Enter για επιλογή. Ο χάρτης είναι σταθερός· χρησιμοποίησε τα κουμπιά + και − για μεγέθυνση.",
+          "Use Tab to move between risk zones and Enter to select. The map is fixed; use the + and − buttons to zoom."
+        )}
       </p>
       <div className="im-head">
         <div>
-          <p className="im-eyebrow">Ζωντανός χάρτης · Live globe</p>
-          <h2 className="im-title">Ελληνικές θάλασσες — εξάπλωση λαγοκέφαλου</h2>
-          <p className="im-sub">3D υδρόγειος εστιασμένη στην Ελλάδα · πραγματικά δεδομένα</p>
+          <p className="im-eyebrow">{t("Ζωντανός χάρτης", "Live map")} · Live globe</p>
+          <h2 className="im-title">{t("Ελληνικές θάλασσες — εξάπλωση λαγοκέφαλου", "Greek seas — pufferfish spread")}</h2>
+          <p className="im-sub">{t("3D υδρόγειος εστιασμένη στην Ελλάδα · πραγματικά δεδομένα", "3D globe focused on Greece · real data")}</p>
         </div>
         <div className="im-toggles">
           <button type="button" className={`im-toggle ${showFlows ? "on" : ""}`} onClick={() => setShowFlows((v) => !v)} aria-pressed={showFlows}>
-            <Fish size={15} /> Ροή εισβολής
+            <Fish size={15} /> {t("Ροή εισβολής", "Invasion flow")}
           </button>
           <button type="button" className={`im-toggle ${showGbif ? "on" : ""}`} onClick={() => setShowGbif((v) => !v)} aria-pressed={showGbif}>
-            <Waves size={15} /> Καταγραφές
+            <Waves size={15} /> {t("Καταγραφές", "Records")}
           </button>
         </div>
       </div>
@@ -241,7 +246,7 @@ export default function GreeceGlobe({ zones = [], selectedZone, onSelectZone, re
               <g transform={`translate(${entryP[0]} ${entryP[1]})`}>
                 <circle r="12" fill="#FF3D5E" opacity="0.22" className="globe-ping" />
                 <circle r="4.5" fill="#FF3D5E" stroke="#fff" strokeWidth="1.2" />
-                <text x="0" y="-12" textAnchor="middle" fill="#ffd7df" fontSize="9" fontWeight="800">Σουέζ →</text>
+                <text x="0" y="-12" textAnchor="middle" fill="#ffd7df" fontSize="9" fontWeight="800">{t("Σουέζ →", "Suez →")}</text>
               </g>
             )}
 
@@ -274,7 +279,7 @@ export default function GreeceGlobe({ zones = [], selectedZone, onSelectZone, re
                   onBlur={() => setHoverId(null)}
                   role="button"
                   tabIndex={0}
-                  aria-label={`${z.area}: κίνδυνος ${z.risk} στα 100, ${z.rn.label}`}
+                  aria-label={t(`${z.area}: κίνδυνος ${z.risk} στα 100, ${z.rn.label}`, `${z.area}: risk ${z.risk} of 100, ${z.rn.labelEn}`)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
@@ -292,55 +297,55 @@ export default function GreeceGlobe({ zones = [], selectedZone, onSelectZone, re
             })}
           </svg>
 
-          <div className="map-controls" role="group" aria-label="Μεγέθυνση χάρτη">
-            <button type="button" onClick={() => zoom(1.35)} aria-label="Μεγέθυνση"><Plus size={16} /></button>
-            <button type="button" onClick={() => zoom(1 / 1.35)} aria-label="Σμίκρυνση"><Minus size={16} /></button>
-            <button type="button" onClick={reset} aria-label="Επαναφορά μεγέθυνσης"><RotateCcw size={15} /></button>
+          <div className="map-controls" role="group" aria-label={t("Μεγέθυνση χάρτη", "Map zoom")}>
+            <button type="button" onClick={() => zoom(1.35)} aria-label={t("Μεγέθυνση", "Zoom in")}><Plus size={16} /></button>
+            <button type="button" onClick={() => zoom(1 / 1.35)} aria-label={t("Σμίκρυνση", "Zoom out")}><Minus size={16} /></button>
+            <button type="button" onClick={reset} aria-label={t("Επαναφορά μεγέθυνσης", "Reset zoom")}><RotateCcw size={15} /></button>
           </div>
-          {r > 1.05 && <div className="map-hint">Μεγέθυνση {r.toFixed(1)}×</div>}
+          {r > 1.05 && <div className="map-hint">{t("Μεγέθυνση", "Zoom")} {r.toFixed(1)}×</div>}
         </div>
 
-        <div className="im-gauges" aria-label="Δείκτες δορυφορικού AI">
-          <GaugeRing value={metrics.conf} label="AI Confidence" sub="μοντέλο πρόβλεψης" color="#7fd4ff" icon={BrainCircuit} />
-          <GaugeRing value={metrics.avg} label="Πίεση εισβολής" sub="μέσος κίνδυνος ζωνών" color="#F07A2E" icon={Activity} />
-          <GaugeRing value={metrics.sstCover} label="Δορυφ. κάλυψη" sub={`SST σε ${metrics.total} ζώνες`} color="#36C5A8" icon={Satellite} orbit />
-          <GaugeRing value={Math.min(100, metrics.points)} display={`${metrics.points}`} label="Καταγραφές" sub="ζωντανά GBIF" color="#ff6fb0" icon={Radar} />
+        <div className="im-gauges" aria-label={t("Δείκτες δορυφορικού AI", "Satellite AI indicators")}>
+          <GaugeRing value={metrics.conf} label={t("Κάλυψη δεδομένων", "Data coverage")} sub={t("3 πηγές", "3 sources")} color="#7fd4ff" icon={BrainCircuit} />
+          <GaugeRing value={metrics.avg} label={t("Πίεση εισβολής", "Invasion pressure")} sub={t("μέσος κίνδυνος", "average risk")} color="#F07A2E" icon={Activity} />
+          <GaugeRing value={metrics.sstCover} label={t("Δορυφ. κάλυψη", "Satellite cov.")} sub={t(`SST σε ${metrics.total} ζώνες`, `SST in ${metrics.total} zones`)} color="#36C5A8" icon={Satellite} orbit />
+          <GaugeRing value={Math.min(100, metrics.points)} display={`${metrics.points}`} label={t("Καταγραφές", "Records")} sub={t("ζωντανά GBIF", "live GBIF")} color="#ff6fb0" icon={Radar} />
         </div>
 
         <aside className="im-side" id="im-side-content">
           {cardZone && (
             <div className="im-card" style={{ borderColor: cardZone.rn.color }}>
-              <p className="im-card-eyebrow">{hoverId ? "Δείχνεις" : "Επιλεγμένη ζώνη"}</p>
+              <p className="im-card-eyebrow">{hoverId ? t("Δείχνεις", "Hovering") : t("Επιλεγμένη ζώνη", "Selected zone")}</p>
               <h3 className="im-card-title">{cardZone.area}</h3>
               <div className="im-card-risk">
-                <span className="im-chip" style={{ background: cardZone.rn.color }}>{cardZone.rn.label}</span>
+                <span className="im-chip" style={{ background: cardZone.rn.color }}>{rl(cardZone.rn)}</span>
                 <strong>{cardZone.risk}/100</strong>
               </div>
               <dl className="im-card-facts">
                 <div>
-                  <dt><Waves size={13} /> Θερμοκρασία</dt>
+                  <dt><Waves size={13} /> {t("Θερμοκρασία", "Temperature")}</dt>
                   <dd>{cardZone.sst != null ? `${cardZone.sst.toFixed(1)}°C` : "—"}</dd>
                 </div>
                 <div>
-                  <dt><Fish size={13} /> Καταγραφές 3ετίας</dt>
+                  <dt><Fish size={13} /> {t("Καταγραφές 3ετίας", "Records (3y)")}</dt>
                   <dd>{cardZone.occRecent != null ? cardZone.occRecent : "—"}</dd>
                 </div>
               </dl>
-              <p className="im-card-note">{cardZone.recommendation}</p>
+              <p className="im-card-note">{lang === "en" && cardZone.recommendationEn ? cardZone.recommendationEn : cardZone.recommendation}</p>
             </div>
           )}
 
           <div className="im-legend">
-            <p className="im-legend-title">Υπόμνημα</p>
-            <div className="im-legend-row"><span className="im-dot" style={{ background: "#E03A4E" }} /> Κρίσιμος / Υψηλός</div>
-            <div className="im-legend-row"><span className="im-dot" style={{ background: "#F2C744" }} /> Μέτριος</div>
-            <div className="im-legend-row"><span className="im-dot" style={{ background: "#36C5A8" }} /> Χαμηλός</div>
-            <div className="im-legend-row"><span className="im-flow-key" /> Πορεία εξάπλωσης</div>
-            <div className="im-legend-row"><span className="im-dot im-dot-sm" style={{ background: "#ff6fb0" }} /> Καταγραφές GBIF</div>
+            <p className="im-legend-title">{t("Υπόμνημα", "Legend")}</p>
+            <div className="im-legend-row"><span className="im-dot" style={{ background: "#E03A4E" }} /> {t("Κρίσιμος / Υψηλός", "Critical / High")}</div>
+            <div className="im-legend-row"><span className="im-dot" style={{ background: "#F2C744" }} /> {t("Μέτριος", "Moderate")}</div>
+            <div className="im-legend-row"><span className="im-dot" style={{ background: "#36C5A8" }} /> {t("Χαμηλός", "Low")}</div>
+            <div className="im-legend-row"><span className="im-flow-key" /> {t("Πορεία εξάπλωσης", "Spread route")}</div>
+            <div className="im-legend-row"><span className="im-dot im-dot-sm" style={{ background: "#ff6fb0" }} /> {t("Καταγραφές GBIF", "GBIF records")}</div>
           </div>
 
           <div className="im-top">
-            <p className="im-legend-title"><AlertTriangle size={13} /> Ζώνες με μεγαλύτερο κίνδυνο</p>
+            <p className="im-legend-title"><AlertTriangle size={13} /> {t("Ζώνες με μεγαλύτερο κίνδυνο", "Highest-risk zones")}</p>
             {topZones.map((z) => {
               const rn = riskNode(z.risk);
               const active = z.id === selectedZone?.id;
