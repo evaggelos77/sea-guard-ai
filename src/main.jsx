@@ -321,6 +321,34 @@ function App() {
   const [realPoints, setRealPoints] = useState([]); // πραγματικές καταγραφές GBIF
   const [searchResult, setSearchResult] = useState(null); // ad-hoc geocoded location
 
+  // Μαλακό prompt στήριξης μετά από λίγες χρήσεις (ΔΕΝ μπλοκάρει την ασφάλεια).
+  const [showSupport, setShowSupport] = useState(false);
+  const supportSeenRef = useRef(false);
+  const bumpUses = useCallback(() => {
+    if (supportSeenRef.current) return;
+    let n = 0;
+    let threshold = 4;
+    try {
+      n = (parseInt(localStorage.getItem("sg-uses"), 10) || 0) + 1;
+      localStorage.setItem("sg-uses", String(n));
+      threshold = parseInt(localStorage.getItem("sg-support-snooze"), 10) || 4;
+    } catch {
+      n = 0;
+    }
+    if (n >= threshold) {
+      supportSeenRef.current = true;
+      setShowSupport(true);
+    }
+  }, []);
+  // Μετά το κλείσιμο, «κοιμίζουμε» το prompt για μερικές ακόμη χρήσεις (όχι σπαμ).
+  const closeSupport = useCallback((supported) => {
+    try {
+      const uses = parseInt(localStorage.getItem("sg-uses"), 10) || 4;
+      localStorage.setItem("sg-support-snooze", String(uses + (supported ? 25 : 6)));
+    } catch {}
+    setShowSupport(false);
+  }, []);
+
   const aliveRef = useRef(true);
 
   // Φόρτωση όλων των ζωνών: batch Open-Meteo Marine (σε λίγες κλήσεις) +
@@ -501,7 +529,10 @@ function App() {
   const pendingSightings = sightings.filter((item) => item.status === "pending");
   const totalKg = catches.reduce((sum, item) => sum + Number(item.kg || 0), 0);
   const severeZones = displayZones.filter((zone) => zone.live && zone.risk >= 80).length;
-  const handleSelectZone = useCallback((zoneId) => setSelectedZoneId(zoneId), []);
+  const handleSelectZone = useCallback((zoneId) => {
+    setSelectedZoneId(zoneId);
+    bumpUses();
+  }, [bumpUses]);
   const forecast = useMemo(
     () => selectedZone.forecast || buildForecast(selectedZone, sightings, catches),
     [selectedZone, sightings, catches]
@@ -571,6 +602,7 @@ function App() {
           : t(`Αποτέλεσμα για ${match.area}: Δείκτης κινδύνου ${r}/100.`, `Result for ${match.area}: Risk score ${r}/100.`)
       );
       setActivePanel("map");
+      bumpUses();
       return;
     }
 
@@ -607,6 +639,7 @@ function App() {
       setAreaQuery(geo.name);
       setAreaSearchNotice(t(`Αποτέλεσμα για ${geo.name}: Δείκτης κινδύνου ${computed.risk}/100.`, `Result for ${geo.name}: Risk score ${computed.risk}/100.`));
       setActivePanel("map");
+      bumpUses();
     } catch {
       setAreaSearchNotice(t("Δεν ήταν δυνατή η αναζήτηση αυτή τη στιγμή. Δοκίμασε ξανά.", "Search isn't available right now. Please try again."));
     }
@@ -625,6 +658,7 @@ function App() {
         : t(`Αποτέλεσμα για ${zone.area}: Δείκτης κινδύνου ${r}/100.`, `Result for ${zone.area}: Risk score ${r}/100.`)
     );
     setActivePanel("map");
+    bumpUses();
   }
 
   const roleToPanel = { citizen: "report", fisherman: "fisherman", authority: "authority", admin: "admin" };
@@ -1085,6 +1119,7 @@ function App() {
       <ScrollDots />
       <LocationAlert zones={displayZones} realPoints={realPoints} />
       <SosButton />
+      {showSupport && <SupportPrompt onClose={closeSupport} />}
       {activePanel === "monitor" && (
         <AuthorityMonitor
           zones={displayZones}
@@ -2691,6 +2726,31 @@ function SupportCard() {
         </a>
       </div>
     </article>
+  );
+}
+
+function SupportPrompt({ onClose }) {
+  const { t } = useLang();
+  return (
+    <div className="support-overlay" role="dialog" aria-modal="true" onClick={() => onClose(false)}>
+      <div className="support-modal" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="support-x" onClick={() => onClose(false)} aria-label={t("Κλείσιμο", "Close")}>
+          <XCircle size={22} aria-hidden="true" />
+        </button>
+        <div className="support-modal-badge" aria-hidden="true"><Fish size={30} /></div>
+        <h3>{t("Σου φάνηκε χρήσιμο;", "Finding it useful?")}</h3>
+        <p>{t(
+          "Το EV SEA GUARD AI είναι δωρεάν για όλους. Με μια στήριξη €0,99 βοηθάς να μένει ζωντανό, ενημερωμένο και να βελτιώνεται.",
+          "EV SEA GUARD AI is free for everyone. A €0.99 contribution helps keep it alive, updated and improving."
+        )}</p>
+        <a className="support-btn big" href={STRIPE_SUPPORT_URL} target="_blank" rel="noopener noreferrer" onClick={() => onClose(true)}>
+          <Star size={18} aria-hidden="true" fill="currentColor" />
+          {t("Στήριξε με €0,99", "Support with €0.99")}
+        </a>
+        <button type="button" className="support-later" onClick={() => onClose(false)}>{t("Όχι τώρα", "Maybe later")}</button>
+        <p className="support-modal-note">{t("Η ασφάλεια παραμένει πάντα δωρεάν.", "Safety always stays free.")}</p>
+      </div>
+    </div>
   );
 }
 

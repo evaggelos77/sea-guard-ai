@@ -2364,3 +2364,41 @@ a.sidebar-credit:hover { opacity: 0.8; }
 a.sidebar-credit:hover .sidebar-credit-site { text-decoration: underline; }
 .brand-link { color: inherit; text-decoration: none; }
 .brand-link:hover { text-decoration: underline; }
+
+/* Μαλακό prompt στήριξης (μετά από λίγες χρήσεις) — κλεινόμενο, δεν μπλοκάρει */
+.support-overlay {
+  position: fixed; inset: 0; z-index: 1300;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  background: rgba(7, 31, 41, 0.55); backdrop-filter: blur(5px);
+  animation: qrFade 0.18s ease-out;
+}
+.support-modal {
+  position: relative; width: min(380px, 92vw);
+  background: #fff; border-radius: 22px; padding: 30px 26px 22px; text-align: center;
+  box-shadow: 0 28px 70px rgba(7, 31, 41, 0.42); border: 1px solid rgba(11, 61, 77, 0.1);
+  animation: qrPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.support-x {
+  position: absolute; top: 12px; right: 12px; background: none; border: none; cursor: pointer;
+  color: #8aa0a8; padding: 4px; display: inline-flex; border-radius: 50%; transition: color 0.15s, background 0.15s;
+}
+.support-x:hover { color: #0b3d4d; background: rgba(11, 61, 77, 0.08); }
+.support-modal-badge {
+  width: 60px; height: 60px; margin: 0 auto 12px; border-radius: 50%;
+  display: grid; place-items: center; color: #1d7fa3;
+  background: linear-gradient(135deg, rgba(95,224,194,0.25), rgba(45,181,201,0.18));
+}
+.support-modal h3 { margin: 0 0 8px; font-family: "Commissioner", sans-serif; color: #0b3d4d; font-size: 1.25rem; }
+.support-modal p { margin: 0 0 18px; font-size: 0.92rem; line-height: 1.5; color: #45616b; }
+.support-btn.big { width: 100%; justify-content: center; font-size: 1rem; padding: 13px 20px; }
+.support-later {
+  display: block; width: 100%; margin: 10px 0 6px; padding: 9px; background: none; border: none;
+  color: #6a808a; font-size: 0.9rem; font-weight: 700; cursor: pointer; border-radius: 10px;
+}
+.support-later:hover { background: rgba(11, 61, 77, 0.06); color: #0b3d4d; }
+.support-modal-note { margin: 0 !important; font-size: 0.76rem !important; color: #2fa66a !important; font-weight: 700; }
+:root[data-contrast="on"] .support-modal { background: #0a0a0a !important; border-color: #ffd000 !important; }
+:root[data-contrast="on"] .support-modal h3,
+:root[data-contrast="on"] .support-modal p { color: #fff !important; }
+:root[data-contrast="on"] .support-modal-note { color: #7CFFB0 !important; }
+:root[data-contrast="on"] .support-later { color: #ffd000 !important; }
