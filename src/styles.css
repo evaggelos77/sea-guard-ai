@@ -2455,3 +2455,12 @@ a.sidebar-credit:hover .sidebar-credit-site { text-decoration: underline; }
 /* «ΖΩΝΤΑΝΟ» / «ΕΠΟΜΕΝΗ ΦΑΣΗ» ετικέτες πηγών → ευανάγνωστες σε σκούρο */
 :root[data-contrast="on"] .source-live { color: #7CFFB0 !important; border-color: #2fa66a !important; }
 :root[data-contrast="on"] .feed-card--planned { opacity: 1 !important; }
+
+/* HC: υπόλοιπα — admin κουμπιά + μπάρες προόδου (σκούρες, με σημασιολογικό χρώμα) */
+:root[data-contrast="on"] .bar-track,
+:root[data-contrast="on"] .feed-meter { background: #2a2d31 !important; }
+:root[data-contrast="on"] .icon-action.approve { background: #0c2f1c !important; color: #7CFFB0 !important; border: 1px solid #2fa66a !important; }
+:root[data-contrast="on"] .icon-action.reject { background: #2a0606 !important; color: #ff8a8a !important; border: 1px solid #ff5a5a !important; }
+:root[data-contrast="on"] .status-badge.verified { color: #7CFFB0 !important; }
+:root[data-contrast="on"] .status-badge.pending { color: #ffcf6b !important; }
+:root[data-contrast="on"] .status-badge.rejected { color: #ff8a8a !important; }
