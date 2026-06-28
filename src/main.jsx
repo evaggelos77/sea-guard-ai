@@ -678,7 +678,8 @@ function App() {
   function submitCitizenReport(event) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const photo = form.get("photo");
+    const photoCam = form.get("photoCamera");
+    const photo = photoCam && photoCam.name ? photoCam : form.get("photo");
     const area = form.get("area") || selectedZone.area;
     const alive = form.get("condition");
     const bite = form.get("bite");
@@ -3085,7 +3086,15 @@ function CitizenReportPanel({ onSubmit, selectedZone, locateUser }) {
         <div className="form-grid">
           <label>
             {t("Φωτογραφία", "Photo")}
-            <input name="photo" type="file" accept="image/*" />
+            <div className="photo-inputs">
+              <label className="camera-capture">
+                <Camera size={16} aria-hidden="true" />
+                {t("Τράβα φωτό", "Take photo")}
+                <input name="photoCamera" type="file" accept="image/*" capture="environment" hidden />
+              </label>
+              <input name="photo" type="file" accept="image/*" className="photo-file" />
+            </div>
+            <span className="photo-hint">{t("Άνοιξε την κάμερα ή διάλεξε από το κινητό σου.", "Open the camera or choose from your phone.")}</span>
           </label>
           <label>
             {t("Περιοχή / παραλία", "Area / beach")}

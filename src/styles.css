@@ -2277,11 +2277,12 @@ html { font-size: calc(100% * var(--ui-scale)); }
 .about-contact a { color: #115e73; font-weight: 800; text-decoration: none; border-bottom: 1.5px solid rgba(17,94,115,0.3); }
 .footer-about-link {
   display: inline-flex; align-items: center; gap: 7px; margin: 8px 0;
-  padding: 8px 14px; border-radius: 999px; font-size: 0.84rem; font-weight: 800;
-  color: #bdf5ff; background: rgba(255,255,255,0.08);
-  border: 1.5px solid rgba(255,255,255,0.22); cursor: pointer; transition: all 0.15s;
+  padding: 8px 14px; border-radius: 999px; font-size: 0.86rem; font-weight: 800;
+  color: #ffffff; background: rgba(127,224,255,0.18);
+  border: 1.5px solid rgba(127,224,255,0.55); cursor: pointer; transition: all 0.15s;
 }
-.footer-about-link:hover { background: rgba(255,255,255,0.16); border-color: #bdf5ff; }
+.footer-about-link svg { color: #7fe0ff; }
+.footer-about-link:hover { background: rgba(127,224,255,0.32); border-color: #7fe0ff; }
 :root[data-contrast="on"] .footer-about-link { background:#000 !important; color:#ffd000 !important; border-color:#ffd000 !important; }
 :root[data-contrast="on"] .about-block h4,
 :root[data-contrast="on"] .formula-chip,
@@ -2351,7 +2352,12 @@ html { font-size: calc(100% * var(--ui-scale)); }
 }
 .support-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(45,181,201,0.42); }
 .footer-links { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.footer-about-link.support { color: #bdf5ff; text-decoration: none; }
+.footer-about-link.support {
+  color: #04313b; text-decoration: none;
+  background: linear-gradient(135deg, #7fe9c8, #2db5c9); border-color: transparent;
+}
+.footer-about-link.support svg { color: #04313b; }
+.footer-about-link.support:hover { background: linear-gradient(135deg, #6fe0bd, #25a7bb); border-color: transparent; }
 :root[data-contrast="on"] .support-card { background: #0a0a0a !important; border-color: #ffd000 !important; }
 :root[data-contrast="on"] .support-copy h3,
 :root[data-contrast="on"] .support-copy p { color: #fff !important; }
@@ -2402,3 +2408,17 @@ a.sidebar-credit:hover .sidebar-credit-site { text-decoration: underline; }
 :root[data-contrast="on"] .support-modal p { color: #fff !important; }
 :root[data-contrast="on"] .support-modal-note { color: #7CFFB0 !important; }
 :root[data-contrast="on"] .support-later { color: #ffd000 !important; }
+
+/* Κουμπί κάμερας στην αναφορά (ανοίγει κατευθείαν την κάμερα στο κινητό) */
+.photo-inputs { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.camera-capture {
+  display: inline-flex !important; align-items: center; gap: 8px; flex: 0 0 auto;
+  padding: 10px 16px; border-radius: 12px; font-size: 0.9rem; font-weight: 800;
+  color: #fff; background: linear-gradient(135deg, #1d7fa3, #115e73);
+  cursor: pointer; border: none; box-shadow: 0 4px 12px rgba(17,94,115,0.28);
+  transition: transform 0.15s, box-shadow 0.15s; width: auto !important;
+}
+.camera-capture:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(17,94,115,0.4); }
+.photo-file { flex: 1 1 180px; min-width: 0; }
+.photo-hint { display: block; margin-top: 6px; font-size: 0.78rem; color: var(--muted); }
+:root[data-contrast="on"] .camera-capture { background:#ffd000 !important; color:#000 !important; box-shadow:none !important; }
