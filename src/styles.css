@@ -2146,25 +2146,26 @@ html { font-size: calc(100% * var(--ui-scale)); }
 .verdict-row.danger { background: rgba(192,32,42,0.12); color: #7d141b; border: 1.5px solid rgba(192,32,42,0.35); }
 
 /* ============================================================
-   HIGH-CONTRAST THEME (χαμηλή όραση: κίτρινο σε μαύρο)
+   HIGH-CONTRAST THEME (χαμηλή όραση): καθαρό λευκό-σε-μαύρο,
+   γκρι διακριτικά borders, απαλό κεχριμπαρένιο μόνο ως τόνος
    ============================================================ */
 :root[data-contrast="on"] {
   --ink: #ffffff;
-  --muted: #ffe27a;
-  --line: #ffd000;
-  --panel: #0a0a0a;
-  --panel-soft: #181818;
-  --sea: #ffd000;
-  --sea-dark: #000000;
-  --aqua: #5fe0ff;
-  --shadow: 0 0 0 2px #ffd000;
+  --muted: #c4ced3;
+  --line: #44474c;
+  --panel: #121315;
+  --panel-soft: #1c1d20;
+  --sea: #ffcf6b;
+  --sea-dark: #0a0a0a;
+  --aqua: #7fe0ff;
+  --shadow: none;
   color-scheme: dark;
   background: #000 !important;
 }
 :root[data-contrast="on"] body { background: #000 !important; }
 :root[data-contrast="on"] .app-shell { background: #000; }
-:root[data-contrast="on"] .sidebar { background: #000 !important; color: #fff; border-right: 2px solid #ffd000; }
-:root[data-contrast="on"] .brand-mark { background: #ffd000; color: #000; }
+:root[data-contrast="on"] .sidebar { background: #050505 !important; color: #fff; border-right: 1px solid #3a3d42; }
+:root[data-contrast="on"] .brand-mark { background: #ffcf6b; color: #000; }
 :root[data-contrast="on"] .info-panel,
 :root[data-contrast="on"] .zone-panel,
 :root[data-contrast="on"] .search-result-card,
@@ -2177,7 +2178,7 @@ html { font-size: calc(100% * var(--ui-scale)); }
 :root[data-contrast="on"] .live-bar,
 :root[data-contrast="on"] .qr-card,
 :root[data-contrast="on"] .safety-verdict {
-  background: #0a0a0a !important; color: #fff !important; border: 1.5px solid #ffd000 !important;
+  background: #121315 !important; color: #fff !important; border: 1px solid #3f4348 !important;
   box-shadow: none !important;
 }
 :root[data-contrast="on"] h1,
@@ -2193,26 +2194,26 @@ html { font-size: calc(100% * var(--ui-scale)); }
 :root[data-contrast="on"] .eyebrow,
 :root[data-contrast="on"] .panel-heading span,
 :root[data-contrast="on"] .timeline-sub,
-:root[data-contrast="on"] dt { color: #ffe27a !important; }
+:root[data-contrast="on"] dt { color: #b9c3c8 !important; }
 :root[data-contrast="on"] input,
 :root[data-contrast="on"] textarea,
 :root[data-contrast="on"] select {
-  background: #000 !important; color: #fff !important; border: 1.5px solid #ffd000 !important;
+  background: #000 !important; color: #fff !important; border: 1px solid #585d62 !important;
 }
 :root[data-contrast="on"] input::placeholder,
-:root[data-contrast="on"] textarea::placeholder { color: #c9c08a !important; }
+:root[data-contrast="on"] textarea::placeholder { color: #9aa3a8 !important; }
 :root[data-contrast="on"] .secondary-action,
 :root[data-contrast="on"] .a11y-btn,
 :root[data-contrast="on"] .read-aloud,
 :root[data-contrast="on"] .lang-toggle button,
 :root[data-contrast="on"] .follow-star {
-  background: #000 !important; color: #ffd000 !important; border: 1.5px solid #ffd000 !important;
+  background: #1a1b1e !important; color: #ffcf6b !important; border: 1px solid #5a5f64 !important;
 }
 :root[data-contrast="on"] .primary-action,
 :root[data-contrast="on"] .a11y-btn.on,
 :root[data-contrast="on"] .lang-toggle button.on,
 :root[data-contrast="on"] .read-aloud.speaking {
-  background: #ffd000 !important; color: #000 !important; border: 1.5px solid #ffd000 !important;
+  background: #ffcf6b !important; color: #000 !important; border: 1px solid #ffcf6b !important;
 }
 :root[data-contrast="on"] .verdict-row.ok { background: #07240f !important; color: #7CFFB0 !important; }
 :root[data-contrast="on"] .verdict-row.warn { background: #2a1d00 !important; color: #ffcf5a !important; }
@@ -2227,7 +2228,7 @@ html { font-size: calc(100% * var(--ui-scale)); }
 :root[data-contrast="on"] textarea:focus-visible,
 :root[data-contrast="on"] select:focus-visible,
 :root[data-contrast="on"] [tabindex]:focus-visible {
-  outline: 3px solid #ffd000 !important; outline-offset: 2px !important;
+  outline: 3px solid #ffcf6b !important; outline-offset: 2px !important;
 }
 
 @media (max-width: 640px) {
@@ -2283,11 +2284,11 @@ html { font-size: calc(100% * var(--ui-scale)); }
 }
 .footer-about-link svg { color: #7fe0ff; }
 .footer-about-link:hover { background: rgba(127,224,255,0.32); border-color: #7fe0ff; }
-:root[data-contrast="on"] .footer-about-link { background:#000 !important; color:#ffd000 !important; border-color:#ffd000 !important; }
+:root[data-contrast="on"] .footer-about-link { background:#000 !important; color:#ffcf6b !important; border-color:#ffcf6b !important; }
 :root[data-contrast="on"] .about-block h4,
 :root[data-contrast="on"] .formula-chip,
 :root[data-contrast="on"] .source-links a,
-:root[data-contrast="on"] .about-contact a { color:#ffd000 !important; }
+:root[data-contrast="on"] .about-contact a { color:#ffcf6b !important; }
 :root[data-contrast="on"] .about-disclaimer { background:#2a0606 !important; border-color:#ff5a5a !important; }
 :root[data-contrast="on"] .about-disclaimer strong,
 :root[data-contrast="on"] .about-disclaimer p,
@@ -2323,7 +2324,7 @@ html { font-size: calc(100% * var(--ui-scale)); }
   padding: 3px 9px; border-radius: 999px; white-space: nowrap;
 }
 :root[data-contrast="on"] .ai-demo-tag,
-:root[data-contrast="on"] .model-planned { color:#ffd000 !important; background:#000 !important; border-color:#ffd000 !important; }
+:root[data-contrast="on"] .model-planned { color:#ffcf6b !important; background:#000 !important; border-color:#ffcf6b !important; }
 
 /* Δορυφόροι overlay πάνω από τον Leaflet χάρτη */
 .risk-map-wrap { position: relative; }
@@ -2358,10 +2359,10 @@ html { font-size: calc(100% * var(--ui-scale)); }
 }
 .footer-about-link.support svg { color: #04313b; }
 .footer-about-link.support:hover { background: linear-gradient(135deg, #6fe0bd, #25a7bb); border-color: transparent; }
-:root[data-contrast="on"] .support-card { background: #0a0a0a !important; border-color: #ffd000 !important; }
+:root[data-contrast="on"] .support-card { background: #121315 !important; border-color: #3f4348 !important; }
 :root[data-contrast="on"] .support-copy h3,
 :root[data-contrast="on"] .support-copy p { color: #fff !important; }
-:root[data-contrast="on"] .support-btn { background: #ffd000 !important; color: #000 !important; box-shadow: none !important; }
+:root[data-contrast="on"] .support-btn { background: #ffcf6b !important; color: #000 !important; box-shadow: none !important; }
 @media (max-width: 560px) { .support-inner { flex-direction: column; align-items: stretch; } .support-btn { justify-content: center; } }
 
 /* Brand links προς evlabsai.gr */
@@ -2403,11 +2404,11 @@ a.sidebar-credit:hover .sidebar-credit-site { text-decoration: underline; }
 }
 .support-later:hover { background: rgba(11, 61, 77, 0.06); color: #0b3d4d; }
 .support-modal-note { margin: 0 !important; font-size: 0.76rem !important; color: #2fa66a !important; font-weight: 700; }
-:root[data-contrast="on"] .support-modal { background: #0a0a0a !important; border-color: #ffd000 !important; }
+:root[data-contrast="on"] .support-modal { background: #121315 !important; border-color: #3f4348 !important; }
 :root[data-contrast="on"] .support-modal h3,
 :root[data-contrast="on"] .support-modal p { color: #fff !important; }
 :root[data-contrast="on"] .support-modal-note { color: #7CFFB0 !important; }
-:root[data-contrast="on"] .support-later { color: #ffd000 !important; }
+:root[data-contrast="on"] .support-later { color: #ffcf6b !important; }
 
 /* Κουμπί κάμερας στην αναφορά (ανοίγει κατευθείαν την κάμερα στο κινητό) */
 .photo-inputs { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
@@ -2421,4 +2422,4 @@ a.sidebar-credit:hover .sidebar-credit-site { text-decoration: underline; }
 .camera-capture:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(17,94,115,0.4); }
 .photo-file { flex: 1 1 180px; min-width: 0; }
 .photo-hint { display: block; margin-top: 6px; font-size: 0.78rem; color: var(--muted); }
-:root[data-contrast="on"] .camera-capture { background:#ffd000 !important; color:#000 !important; box-shadow:none !important; }
+:root[data-contrast="on"] .camera-capture { background:#ffcf6b !important; color:#000 !important; box-shadow:none !important; }
