@@ -2423,3 +2423,26 @@ a.sidebar-credit:hover .sidebar-credit-site { text-decoration: underline; }
 .photo-file { flex: 1 1 180px; min-width: 0; }
 .photo-hint { display: block; margin-top: 6px; font-size: 0.78rem; color: var(--muted); }
 :root[data-contrast="on"] .camera-capture { background:#ffcf6b !important; color:#000 !important; box-shadow:none !important; }
+
+/* HIGH-CONTRAST FIX: εσωτερικά κουτιά με ανοιχτό φόντο → σκούρα,
+   ώστε το λευκό κείμενο να φαίνεται (ήταν λευκό-σε-λευκό). */
+:root[data-contrast="on"] .result-risk,
+:root[data-contrast="on"] .ai-system,
+:root[data-contrast="on"] .alert-draft,
+:root[data-contrast="on"] .compensation-box,
+:root[data-contrast="on"] .protocol-list div,
+:root[data-contrast="on"] .my-beach-chip,
+:root[data-contrast="on"] .quick-area-grid button,
+:root[data-contrast="on"] .search-input-wrap,
+:root[data-contrast="on"] th,
+:root[data-contrast="on"] .status-badge {
+  background: #1a1b1e !important; color: #fff !important; border-color: #5a5f64 !important;
+}
+:root[data-contrast="on"] .result-risk { border-color: #ffcf6b !important; }
+:root[data-contrast="on"] .result-risk span,
+:root[data-contrast="on"] .result-risk small,
+:root[data-contrast="on"] .status-badge,
+:root[data-contrast="on"] .ai-system *,
+:root[data-contrast="on"] .alert-draft *,
+:root[data-contrast="on"] .protocol-list div * { color: #fff !important; }
+:root[data-contrast="on"] .protocol-list svg { color: #7CFFB0 !important; }
