@@ -2707,9 +2707,8 @@ function InstallGuide() {
   );
 }
 
-const STRIPE_SUPPORT_URL = "https://buy.stripe.com/eVqdRb0v1aP96YVarj1gs09";
-// Προσωρινά κρυφό μέχρι να βγει LIVE (ενεργοποιημένο) το Stripe link. Γύρνα σε true όταν δουλεύει.
-const SUPPORT_ENABLED = false;
+const STRIPE_SUPPORT_URL = "https://buy.stripe.com/eVqdRb0vlaP96YVarj1gs09";
+const SUPPORT_ENABLED = true;
 
 function SupportCard() {
   const { t } = useLang();
