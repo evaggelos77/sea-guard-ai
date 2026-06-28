@@ -1108,10 +1108,12 @@ function App() {
               <Database size={15} aria-hidden="true" />
               {t("Πηγές & Μεθοδολογία", "Sources & Methodology")}
             </button>
-            <a className="footer-about-link support" href={STRIPE_SUPPORT_URL} target="_blank" rel="noopener noreferrer">
-              <Star size={15} aria-hidden="true" fill="currentColor" />
-              {t("Στήριξε με €0,99", "Support €0.99")}
-            </a>
+            {SUPPORT_ENABLED && (
+              <a className="footer-about-link support" href={STRIPE_SUPPORT_URL} target="_blank" rel="noopener noreferrer">
+                <Star size={15} aria-hidden="true" fill="currentColor" />
+                {t("Στήριξε με €0,99", "Support €0.99")}
+              </a>
+            )}
           </div>
           <p className="ev-footer-copy">© {new Date().getFullYear()} EV LABS AI — {t("Όλα τα δικαιώματα κατοχυρωμένα.", "All rights reserved.")}</p>
         </footer>
@@ -1119,7 +1121,7 @@ function App() {
       <ScrollDots />
       <LocationAlert zones={displayZones} realPoints={realPoints} />
       <SosButton />
-      {showSupport && <SupportPrompt onClose={closeSupport} />}
+      {SUPPORT_ENABLED && showSupport && <SupportPrompt onClose={closeSupport} />}
       {activePanel === "monitor" && (
         <AuthorityMonitor
           zones={displayZones}
@@ -2706,6 +2708,8 @@ function InstallGuide() {
 }
 
 const STRIPE_SUPPORT_URL = "https://buy.stripe.com/eVqdRb0v1aP96YVarj1gs09";
+// Προσωρινά κρυφό μέχρι να βγει LIVE (ενεργοποιημένο) το Stripe link. Γύρνα σε true όταν δουλεύει.
+const SUPPORT_ENABLED = false;
 
 function SupportCard() {
   const { t } = useLang();
@@ -2772,7 +2776,7 @@ function HomePanel() {
   return (
     <section className="panel-grid">
       <InstallGuide />
-      <SupportCard />
+      {SUPPORT_ENABLED && <SupportCard />}
       <article className="info-panel wide danger-banner">
         <div className="panel-heading">
           <div>
