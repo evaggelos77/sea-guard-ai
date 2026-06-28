@@ -313,33 +313,54 @@ function App() {
   const [realPoints, setRealPoints] = useState([]); // πραγματικές καταγραφές GBIF
   const [searchResult, setSearchResult] = useState(null); // ad-hoc geocoded location
 
-  // Μαλακό prompt στήριξης μετά από λίγες χρήσεις (ΔΕΝ μπλοκάρει την ασφάλεια).
+  // €0,99 ΥΠΟΧΡΕΩΤΙΚΗ στήριξη μετά από λίγες δωρεάν χρήσεις. Ξεκλειδώνει μόνιμα με πληρωμή.
+  const FREE_USES = 4;
+  const [paid, setPaid] = useState(() => {
+    try {
+      return localStorage.getItem("sg-paid") === "1";
+    } catch {
+      return false;
+    }
+  });
   const [showSupport, setShowSupport] = useState(false);
   const supportSeenRef = useRef(false);
+
+  const unlockPaid = useCallback(() => {
+    try {
+      localStorage.setItem("sg-paid", "1");
+    } catch {}
+    setPaid(true);
+    setShowSupport(false);
+  }, []);
+
+  // Επιστροφή από Stripe με ?paid → ξεκλείδωμα + καθάρισμα URL.
+  useEffect(() => {
+    try {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get("paid")) {
+        unlockPaid();
+        const url = new URL(window.location.href);
+        url.searchParams.delete("paid");
+        window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const bumpUses = useCallback(() => {
-    if (supportSeenRef.current) return;
+    if (paid || supportSeenRef.current) return;
     let n = 0;
-    let threshold = 4;
     try {
       n = (parseInt(localStorage.getItem("sg-uses"), 10) || 0) + 1;
       localStorage.setItem("sg-uses", String(n));
-      threshold = parseInt(localStorage.getItem("sg-support-snooze"), 10) || 4;
     } catch {
       n = 0;
     }
-    if (n >= threshold) {
+    if (n >= FREE_USES) {
       supportSeenRef.current = true;
       setShowSupport(true);
     }
-  }, []);
-  // Μετά το κλείσιμο, «κοιμίζουμε» το prompt για μερικές ακόμη χρήσεις (όχι σπαμ).
-  const closeSupport = useCallback((supported) => {
-    try {
-      const uses = parseInt(localStorage.getItem("sg-uses"), 10) || 4;
-      localStorage.setItem("sg-support-snooze", String(uses + (supported ? 25 : 6)));
-    } catch {}
-    setShowSupport(false);
-  }, []);
+  }, [paid]);
 
   const aliveRef = useRef(true);
 
@@ -665,8 +686,9 @@ function App() {
   function submitCitizenReport(event) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const photoCam = form.get("photoCamera");
-    const photo = photoCam && photoCam.name ? photoCam : form.get("photo");
+    const camName = form.get("photoCameraName");
+    const filePhoto = form.get("photo");
+    const photo = camName ? { name: camName } : filePhoto;
     const area = form.get("area") || selectedZone.area;
     const alive = form.get("condition");
     const bite = form.get("bite");
@@ -788,6 +810,7 @@ function App() {
               <button type="button" className={lang === "en" ? "on" : ""} onClick={() => setLang("en")} aria-pressed={lang === "en"}>EN</button>
             </div>
             <AccessibilityBar />
+            <InstallButton />
             <button type="button" className="primary-action" onClick={locateUser}>
               <LocateFixed size={18} aria-hidden="true" />
               {t("Δες την περιοχή μου", "See my area")}
@@ -1092,7 +1115,7 @@ function App() {
       <ScrollDots />
       <LocationAlert zones={displayZones} realPoints={realPoints} />
       <SosButton />
-      {SUPPORT_ENABLED && showSupport && <SupportPrompt onClose={closeSupport} />}
+      {SUPPORT_ENABLED && showSupport && !paid && <SupportPrompt onUnlock={unlockPaid} />}
       {activePanel === "monitor" && (
         <AuthorityMonitor
           zones={displayZones}
@@ -1600,6 +1623,84 @@ function AccessibilityBar() {
         <button type="button" className="a11y-btn icon" onClick={() => bumpScale(1)} disabled={scale >= 1.3} aria-label={t("Μεγαλύτερα γράμματα", "Larger text")}>Α+</button>
       </div>
     </div>
+  );
+}
+
+function InstallButton() {
+  const { t } = useLang();
+  const [open, setOpen] = useState(false);
+  const [deferred, setDeferred] = useState(null);
+  const [installed, setInstalled] = useState(false);
+  useEffect(() => {
+    const onPrompt = (e) => {
+      e.preventDefault();
+      setDeferred(e);
+    };
+    const onInstalled = () => {
+      setInstalled(true);
+      setDeferred(null);
+    };
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("appinstalled", onInstalled);
+    try {
+      if (window.matchMedia?.("(display-mode: standalone)").matches) setInstalled(true);
+    } catch {}
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, []);
+  if (installed) return null;
+  const installNow = async () => {
+    if (!deferred) return;
+    deferred.prompt();
+    try {
+      await deferred.userChoice;
+    } catch {}
+    setDeferred(null);
+    setOpen(false);
+  };
+  return (
+    <>
+      <button type="button" className="install-btn" onClick={() => (deferred ? installNow() : setOpen(true))}>
+        <Download size={18} aria-hidden="true" />
+        {t("Εγκατάσταση", "Install")}
+      </button>
+      {open && (
+        <div className="qr-overlay" role="dialog" aria-modal="true" onClick={() => setOpen(false)}>
+          <div className="install-modal" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="qr-x" onClick={() => setOpen(false)} aria-label={t("Κλείσιμο", "Close")}>
+              <XCircle size={22} aria-hidden="true" />
+            </button>
+            <div className="install-modal-icon" aria-hidden="true"><Download size={30} /></div>
+            <h3>{t("Βάλε το app στην οθόνη σου", "Add the app to your screen")}</h3>
+            <p className="install-modal-sub">{t("Άνοιγμα με ένα άγγιγμα, εικονίδιο & λειτουργία offline — σαν κανονική εφαρμογή.", "One-tap open, an icon & offline mode — like a real app.")}</p>
+            {deferred && (
+              <button type="button" className="primary-action install-now" onClick={installNow}>
+                <Download size={18} aria-hidden="true" />
+                {t("Εγκατάσταση τώρα", "Install now")}
+              </button>
+            )}
+            <div className="install-steps">
+              <div>
+                <strong>📱 Android (Chrome)</strong>
+                <ol>
+                  <li>{t("Πάτησε το μενού ⋮ (πάνω δεξιά)", "Tap the ⋮ menu (top right)")}</li>
+                  <li>{t("«Εγκατάσταση εφαρμογής» ή «Προσθήκη στην αρχική»", "“Install app” or “Add to Home screen”")}</li>
+                </ol>
+              </div>
+              <div>
+                <strong>🍏 iPhone / iPad (Safari)</strong>
+                <ol>
+                  <li>{t("Πάτησε το κουμπί Διαμοιρασμού (το τετράγωνο με το βελάκι ↑)", "Tap the Share button (the square with an arrow ↑)")}</li>
+                  <li>{t("Διάλεξε «Προσθήκη στην οθόνη Αφετηρίας»", "Choose “Add to Home Screen”")}</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -2703,26 +2804,28 @@ function SupportCard() {
   );
 }
 
-function SupportPrompt({ onClose }) {
+function SupportPrompt({ onUnlock }) {
   const { t } = useLang();
   return (
-    <div className="support-overlay" role="dialog" aria-modal="true" onClick={() => onClose(false)}>
-      <div className="support-modal" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="support-x" onClick={() => onClose(false)} aria-label={t("Κλείσιμο", "Close")}>
-          <XCircle size={22} aria-hidden="true" />
-        </button>
+    <div className="support-overlay paywall" role="dialog" aria-modal="true">
+      <div className="support-modal">
         <div className="support-modal-badge" aria-hidden="true"><Fish size={30} /></div>
-        <h3>{t("Σου φάνηκε χρήσιμο;", "Finding it useful?")}</h3>
+        <h3>{t("Συνέχισε με το EV SEA GUARD AI", "Continue with EV SEA GUARD AI")}</h3>
         <p>{t(
-          "Το EV SEA GUARD AI είναι δωρεάν για όλους. Με μια στήριξη €0,99 βοηθάς να μένει ζωντανό, ενημερωμένο και να βελτιώνεται.",
-          "EV SEA GUARD AI is free for everyone. A €0.99 contribution helps keep it alive, updated and improving."
+          "Είδες δωρεάν τις πρώτες περιοχές! Με μια στήριξη €0,99 ξεκλειδώνεις απεριόριστη χρήση — και βοηθάς να μένει ζωντανή και ενημερωμένη η εφαρμογή.",
+          "You've seen the first areas free! A €0.99 contribution unlocks unlimited use — and helps keep the app alive and updated."
         )}</p>
-        <a className="support-btn big" href={STRIPE_SUPPORT_URL} target="_blank" rel="noopener noreferrer" onClick={() => onClose(true)}>
+        <a className="support-btn big" href={STRIPE_SUPPORT_URL}>
           <Star size={18} aria-hidden="true" fill="currentColor" />
-          {t("Στήριξε με €0,99", "Support with €0.99")}
+          {t("Στήριξε & ξεκλείδωσε €0,99", "Support & unlock €0.99")}
         </a>
-        <button type="button" className="support-later" onClick={() => onClose(false)}>{t("Όχι τώρα", "Maybe later")}</button>
-        <p className="support-modal-note">{t("Η ασφάλεια παραμένει πάντα δωρεάν.", "Safety always stays free.")}</p>
+        <a className="paywall-sos" href="tel:112">
+          <Siren size={16} aria-hidden="true" />
+          {t("Επείγον; Κάλεσε 112 (πάντα δωρεάν)", "Emergency? Call 112 (always free)")}
+        </a>
+        <button type="button" className="support-already" onClick={onUnlock}>
+          {t("Πλήρωσα ήδη; Ξεκλείδωσε", "Already paid? Unlock")}
+        </button>
       </div>
     </div>
   );
@@ -3041,8 +3144,120 @@ function AiModelStackPanel() {
   );
 }
 
+// Πραγματική κάμερα μέσα στην εφαρμογή (getUserMedia) — ανοίγει σε desktop & κινητό.
+// Fallback σε file input (με capture) αν δεν επιτρέπεται/υπάρχει κάμερα.
+function CameraCapture({ onCapture }) {
+  const { t } = useLang();
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState(false);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+
+  const stop = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((tr) => tr.stop());
+      streamRef.current = null;
+    }
+  }, []);
+
+  const start = async () => {
+    setError(false);
+    setOpen(true);
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) throw new Error("no camera");
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play().catch(() => {});
+      }
+    } catch {
+      setError(true);
+    }
+  };
+
+  const close = () => {
+    stop();
+    setOpen(false);
+  };
+
+  const shoot = () => {
+    const v = videoRef.current;
+    if (!v || !v.videoWidth) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = v.videoWidth;
+    canvas.height = v.videoHeight;
+    canvas.getContext("2d").drawImage(v, 0, 0);
+    const url = canvas.toDataURL("image/jpeg", 0.85);
+    onCapture?.(url);
+    close();
+  };
+
+  useEffect(() => () => stop(), [stop]);
+
+  return (
+    <>
+      <button type="button" className="camera-capture" onClick={start}>
+        <Camera size={16} aria-hidden="true" />
+        {t("Τράβα φωτό", "Take photo")}
+      </button>
+      {open && (
+        <div className="camera-overlay" role="dialog" aria-modal="true" onClick={close}>
+          <div className="camera-modal" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="camera-x" onClick={close} aria-label={t("Κλείσιμο", "Close")}>
+              <XCircle size={24} aria-hidden="true" />
+            </button>
+            {error ? (
+              <div className="camera-fallback">
+                <Camera size={34} aria-hidden="true" />
+                <p>{t("Δεν μπόρεσα να ανοίξω την κάμερα (άδεια ή υποστήριξη). Διάλεξε ή τράβα φωτό από τη συσκευή:", "Couldn't open the camera (permission or support). Pick or take a photo from your device:")}</p>
+                <label className="primary-action">
+                  <Camera size={18} aria-hidden="true" />
+                  {t("Άνοιξε κάμερα / αρχεία", "Open camera / files")}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    hidden
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) {
+                        onCapture?.(URL.createObjectURL(f), f.name);
+                        close();
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+            ) : (
+              <>
+                <video ref={videoRef} playsInline muted className="camera-video" />
+                <div className="camera-actions">
+                  <button type="button" className="primary-action camera-shoot" onClick={shoot}>
+                    <Camera size={20} aria-hidden="true" />
+                    {t("Φωτογράφισε", "Capture")}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 function CitizenReportPanel({ onSubmit, selectedZone, locateUser }) {
   const { t } = useLang();
+  const [capturedUrl, setCapturedUrl] = useState("");
+  const [capturedName, setCapturedName] = useState("");
+  const onCapture = (url, name) => {
+    setCapturedUrl(url);
+    setCapturedName(name || "camera-photo.jpg");
+  };
   return (
     <section className="panel-grid">
       <form className="info-panel wide form-panel" onSubmit={onSubmit}>
@@ -3057,14 +3272,12 @@ function CitizenReportPanel({ onSubmit, selectedZone, locateUser }) {
           <label>
             {t("Φωτογραφία", "Photo")}
             <div className="photo-inputs">
-              <label className="camera-capture">
-                <Camera size={16} aria-hidden="true" />
-                {t("Τράβα φωτό", "Take photo")}
-                <input name="photoCamera" type="file" accept="image/*" capture="environment" hidden />
-              </label>
+              <CameraCapture onCapture={onCapture} />
               <input name="photo" type="file" accept="image/*" className="photo-file" />
             </div>
-            <span className="photo-hint">{t("Άνοιξε την κάμερα ή διάλεξε από το κινητό σου.", "Open the camera or choose from your phone.")}</span>
+            {capturedUrl && <img src={capturedUrl} className="camera-thumb" alt={t("Τραβηγμένη φωτογραφία", "Captured photo")} />}
+            <input type="hidden" name="photoCameraName" value={capturedName} />
+            <span className="photo-hint">{t("Πάτησε «Τράβα φωτό» για την κάμερα ή διάλεξε αρχείο από τη συσκευή.", "Tap “Take photo” for the camera or choose a file from your device.")}</span>
           </label>
           <label>
             {t("Περιοχή / παραλία", "Area / beach")}
