@@ -753,7 +753,7 @@ function App() {
           </div>
           <div>
             <strong>EV SEA GUARD AI</strong>
-            <span>{t("Θαλάσσια προστασία", "Marine protection")}</span>
+            <span>{t("Κίνδυνος λαγοκέφαλου", "Pufferfish risk")}</span>
           </div>
         </div>
 
@@ -778,8 +778,8 @@ function App() {
           <div className="topbar-title">
             <BrandLogo3D />
             <div>
-              <p className="eyebrow">{t("Ζωντανός χάρτης κινδύνου · EV LABS AI", "Live risk map · EV LABS AI")}</p>
-              <h1>{t("Δες τι συμβαίνει σήμερα στη θάλασσα γύρω σου.", "See what's happening in the sea around you today.")}</h1>
+              <p className="eyebrow">{t("Ζωντανός χάρτης κινδύνου λαγοκέφαλου · EV LABS AI", "Live pufferfish risk map · EV LABS AI")}</p>
+              <h1>{t("Λαγοκέφαλος: δες τι συμβαίνει σήμερα στη θάλασσα γύρω σου.", "Pufferfish: see what's happening in the sea around you today.")}</h1>
             </div>
           </div>
           <div className="topbar-actions">
