@@ -2431,6 +2431,9 @@ a.sidebar-credit:hover .sidebar-credit-site { text-decoration: underline; }
 :root[data-contrast="on"] .alert-draft,
 :root[data-contrast="on"] .compensation-box,
 :root[data-contrast="on"] .protocol-list div,
+:root[data-contrast="on"] .forecast-card,
+:root[data-contrast="on"] .feed-card,
+:root[data-contrast="on"] .model-row,
 :root[data-contrast="on"] .my-beach-chip,
 :root[data-contrast="on"] .quick-area-grid button,
 :root[data-contrast="on"] .search-input-wrap,
@@ -2444,5 +2447,11 @@ a.sidebar-credit:hover .sidebar-credit-site { text-decoration: underline; }
 :root[data-contrast="on"] .status-badge,
 :root[data-contrast="on"] .ai-system *,
 :root[data-contrast="on"] .alert-draft *,
-:root[data-contrast="on"] .protocol-list div * { color: #fff !important; }
+:root[data-contrast="on"] .protocol-list div *,
+:root[data-contrast="on"] .forecast-card *,
+:root[data-contrast="on"] .feed-card *,
+:root[data-contrast="on"] .model-row * { color: #fff !important; }
 :root[data-contrast="on"] .protocol-list svg { color: #7CFFB0 !important; }
+/* «ΖΩΝΤΑΝΟ» / «ΕΠΟΜΕΝΗ ΦΑΣΗ» ετικέτες πηγών → ευανάγνωστες σε σκούρο */
+:root[data-contrast="on"] .source-live { color: #7CFFB0 !important; border-color: #2fa66a !important; }
+:root[data-contrast="on"] .feed-card--planned { opacity: 1 !important; }
