@@ -235,19 +235,11 @@ const aiModels = [
   }
 ];
 
-const roles = [
-  { id: "citizen", label: "Πολίτης / λουόμενος", labelEn: "Citizen / swimmer", icon: Users },
-  { id: "fisherman", label: "Ψαράς", labelEn: "Fisherman", icon: Anchor },
-  { id: "authority", label: "Δήμος / Περιφέρεια", labelEn: "Municipality / Region", icon: BarChart3 },
-  { id: "admin", label: "Admin", labelEn: "Admin", icon: ShieldCheck }
-];
-
 const areaAliases = AREA_ALIASES;
 const MIN_TIMELINE_YEAR = 2005; // πρώτες ελληνικές καταγραφές λαγοκέφαλου
 
 function App() {
   const { lang, setLang, t } = useLang();
-  const [role, setRole] = useState("citizen");
   const [selectedZoneId, setSelectedZoneId] = useState("rhodes");
   const [sightings, setSightings] = useState(initialSightings);
   const [catches, setCatches] = useState(initialCatches);
@@ -661,7 +653,6 @@ function App() {
     bumpUses();
   }
 
-  const roleToPanel = { citizen: "report", fisherman: "fisherman", authority: "authority", admin: "admin" };
   function goToPanel(panel) {
     setActivePanel(panel);
     if (typeof requestAnimationFrame !== "undefined") {
@@ -669,10 +660,6 @@ function App() {
         document.getElementById("panel-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     }
-  }
-  function selectRole(roleId) {
-    setRole(roleId);
-    goToPanel(roleToPanel[roleId] || "home");
   }
 
   function submitCitizenReport(event) {
@@ -768,23 +755,6 @@ function App() {
             <strong>EV SEA GUARD AI</strong>
             <span>{t("Θαλάσσια προστασία", "Marine protection")}</span>
           </div>
-        </div>
-
-        <div className="role-stack" aria-label={t("Επιλογή ρόλου", "Choose role")}>
-          {roles.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                className={`role-button ${role === item.id ? "active" : ""}`}
-                key={item.id}
-                type="button"
-                onClick={() => selectRole(item.id)}
-              >
-                <Icon size={18} aria-hidden="true" />
-                <span>{lang === "en" ? item.labelEn : item.label}</span>
-              </button>
-            );
-          })}
         </div>
 
         <nav className="section-nav" aria-label={t("Ενότητες", "Sections")}>
